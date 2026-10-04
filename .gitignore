@@ -15,8 +15,13 @@ env/
 .idea/
 .DS_Store
 Thumbs.db
+.md
 
-# Build artifacts
+# Build artifacts & Database
 dist/
 build/
 *.log
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
