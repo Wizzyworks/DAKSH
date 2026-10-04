@@ -20,3 +20,5 @@ Thumbs.db
 dist/
 build/
 *.log
+*.sqlite3
+*.sqlite3-journal
