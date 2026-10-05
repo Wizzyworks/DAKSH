@@ -67,7 +67,7 @@ Key achievements in this milestone:
 
 ```
 backend/
-├── daksh_project/
+├── daksh_backend/
 │   ├── settings.py              # Django core settings (JWT, CORS, DB configurations)
 │   ├── urls.py                  # Root URL router & API discovery entry point
 │   ├── wsgi.py & asgi.py        # WSGI & ASGI deployment gateways

@@ -51,7 +51,7 @@ backend/
 ├── .env / .env.example
 ├── README.md
 │
-├── daksh_project/                  # Django project configuration
+├── daksh_backend/                  # Django project configuration
 │   ├── settings.py
 │   ├── urls.py
 │   ├── wsgi.py

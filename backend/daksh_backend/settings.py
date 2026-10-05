@@ -50,7 +50,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'daksh_project.urls'
+ROOT_URLCONF = 'daksh_backend.urls'
 
 TEMPLATES = [
     {
@@ -68,8 +68,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'daksh_project.wsgi.application'
-ASGI_APPLICATION = 'daksh_project.asgi.application'
+WSGI_APPLICATION = 'daksh_backend.wsgi.application'
+ASGI_APPLICATION = 'daksh_backend.asgi.application'
 
 # Database Configuration
 USE_POSTGRES = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
