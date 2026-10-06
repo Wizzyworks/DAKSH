@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, UserProfile, UserGamificationProfile, UserSkill
+from .models import User, UserProfile, UserGamificationProfile, UserSkill, SkillMaster
 
 
 class UserProfileInline(admin.StackedInline):
@@ -60,6 +60,13 @@ class UserGamificationProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'total_xp', 'tier_badge', 'current_streak_days', 'longest_streak_days', 'last_active_date')
     search_fields = ('user__email', 'tier_badge')
     list_filter = ('tier_badge',)
+
+
+@admin.register(SkillMaster)
+class SkillMasterAdmin(admin.ModelAdmin):
+    list_display = ('canonical_name', 'category', 'is_verified', 'created_at')
+    search_fields = ('canonical_name',)
+    list_filter = ('category', 'is_verified')
 
 
 @admin.register(UserSkill)

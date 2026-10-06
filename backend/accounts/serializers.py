@@ -1,11 +1,27 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from rest_framework_simplejwt.tokens import RefreshToken
-from .models import UserProfile, UserGamificationProfile, UserSkill, UserRole, ProficiencyEnum, SkillSourceEnum
-from ..skills.models import SkillMaster
+from .models import (
+    UserProfile,
+    UserGamificationProfile,
+    UserSkill,
+    SkillMaster,
+    UserRole,
+    ProficiencyEnum,
+    SkillSourceEnum,
+)
 
 User = get_user_model()
+
+
+class SkillMasterSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Skill taxonomy objects.
+    """
+    class Meta:
+        model = SkillMaster
+        fields = ['id', 'canonical_name', 'slug', 'category', 'description', 'is_verified', 'created_at']
+        read_only_fields = ['id', 'slug', 'created_at']
 
 
 class UserSkillSerializer(serializers.ModelSerializer):
@@ -249,7 +265,6 @@ class OnboardingSerializer(serializers.Serializer):
     def save(self, user):
         profile, _ = UserProfile.objects.get_or_create(user=user)
 
-        # Fields to update on profile
         profile_fields = [
             'first_name', 'last_name', 'phone_number', 'college_name', 'college_tier',
             'degree', 'branch_discipline', 'current_status', 'graduation_year',

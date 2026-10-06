@@ -30,13 +30,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
-    # Daksh Domain Apps
-    'apps.accounts',
-    'apps.skills',
-    'apps.learning',
-    'apps.interviews',
-    'apps.resumes',
-    'apps.jobs',
+    # Daksh App
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -71,8 +66,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'daksh_backend.wsgi.application'
 ASGI_APPLICATION = 'daksh_backend.asgi.application'
 
-# Database Configuration
 USE_POSTGRES = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
+USE_SQLITE = not USE_POSTGRES
 
 if USE_POSTGRES:
     DATABASES = {

@@ -1,10 +1,9 @@
 from datetime import date, timedelta
-from rest_framework import status, permissions, views, generics
+from rest_framework import status, permissions, views
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
-from .models import UserProfile, UserGamificationProfile, UserSkill
+from .models import UserProfile, UserGamificationProfile, UserSkill, SkillMaster
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -14,7 +13,6 @@ from .serializers import (
     UserSkillSerializer,
     ChangePasswordSerializer,
 )
-from ..skills.models import SkillMaster
 
 User = get_user_model()
 
@@ -61,7 +59,6 @@ class RegisterView(views.APIView):
         if serializer.is_valid():
             user = serializer.save()
             tokens = get_tokens_for_user(user)
-            # Re-fetch user with fresh related profile from DB
             user = User.objects.select_related('profile', 'gamification').get(id=user.id)
             user_data = UserDetailSerializer(user).data
             return Response({

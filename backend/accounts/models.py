@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from .managers import UserManager
 
@@ -25,6 +26,13 @@ class SkillSourceEnum(models.TextChoices):
     SELF = 'self', _('Self')
 
 
+class SkillCategoryEnum(models.TextChoices):
+    TECHNICAL = 'technical', _('Technical')
+    DOMAIN = 'domain', _('Domain')
+    SOFT = 'soft', _('Soft')
+    TOOL = 'tool', _('Tool')
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     """
     Core User model matching daksh.users table.
@@ -32,6 +40,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(_('email address'), max_length=255, unique=True, db_index=True)
+    password = models.CharField(_('password'), max_length=255, db_column='password_hash')
     role = models.CharField(
         max_length=20,
         choices=UserRole.choices,
@@ -183,6 +192,37 @@ class UserGamificationProfile(models.Model):
         return f"{self.user.email} - {self.tier_badge} ({self.total_xp} XP)"
 
 
+class SkillMaster(models.Model):
+    """
+    Skills master taxonomy table matching daksh.skills_master.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    canonical_name = models.CharField(max_length=150, unique=True)
+    slug = models.SlugField(max_length=150, unique=True)
+    category = models.CharField(
+        max_length=20,
+        choices=SkillCategoryEnum.choices,
+        default=SkillCategoryEnum.TECHNICAL
+    )
+    description = models.TextField(blank=True, null=True)
+    is_verified = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'skills_master'
+        verbose_name = _('Skill Master')
+        verbose_name_plural = _('Skills Master')
+        ordering = ['canonical_name']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.canonical_name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.canonical_name} ({self.category})"
+
+
 class UserSkill(models.Model):
     """
     User skill relationship model matching daksh.user_skills table.
@@ -196,7 +236,7 @@ class UserSkill(models.Model):
         db_column='user_id'
     )
     skill = models.ForeignKey(
-        'skills.SkillMaster',
+        SkillMaster,
         on_delete=models.RESTRICT,
         related_name='user_skills',
         db_column='skill_id'
