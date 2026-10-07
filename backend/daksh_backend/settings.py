@@ -14,14 +14,21 @@ DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "rest_framework",
-    "skill_gap",
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    # Third-party apps
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
+
+    # Daksh App
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -55,6 +62,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "daksh_backend.wsgi.application"
 
+USE_POSTGRES = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
+USE_SQLITE = not USE_POSTGRES
+
+if USE_POSTGRES:
 # Database Configuration
 # Defaults to PostgreSQL, falls back to SQLite in testing environment if Postgres is not reachable
 DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.postgresql")
