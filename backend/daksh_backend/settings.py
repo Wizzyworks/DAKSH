@@ -4,11 +4,8 @@ Django settings for DAKSH backend project.
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
-BASE_DIR = Path(__file__).resolve().parent.parent
-# Load environment variables from .env file
-load_dotenv(BASE_DIR / '.env')
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-daksh-skill-gap-analysis-dev-key")
 
@@ -33,12 +30,11 @@ INSTALLED_APPS = [
     # Daksh App
     'accounts',
     'skill_gap',
-    'learning_hub',
 ]
-
 AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -70,7 +66,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "daksh_backend.wsgi.application"
 # Database Configuration (Defaults to SQLite for local development, switches to PostgreSQL if enabled)
 USE_POSTGRES = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
-USE_SQLITE = not USE_POSTGRES
 if USE_POSTGRES:
     DATABASES = {
         "default": {
@@ -89,6 +84,7 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -113,7 +109,9 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.JSONParser",
     ],
 }
-
-# Groq AI Configuration
+# Media Files Configuration (for uploaded resumes)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+# Groq API Configuration for AI Inference
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
-GROQ_MODEL = os.getenv('GROQ_MODEL', 'openai/gpt-oss-120b')
+GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')

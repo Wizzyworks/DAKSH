@@ -159,3 +159,4 @@ class SkillGapItem(models.Model):
 
     def __str__(self):
         return f"Gap in {self.skill.canonical_name} ({self.gap_severity})"
+
