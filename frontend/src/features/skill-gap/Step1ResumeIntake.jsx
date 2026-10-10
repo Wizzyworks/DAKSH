@@ -1,187 +1,286 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { FileCheck, UploadCloud, CheckCircle, ArrowRight } from 'lucide-react'
+import {
+  UserCheck,
+  ShieldCheck,
+  GraduationCap,
+  Sparkles,
+  ArrowRight,
+  HelpCircle,
+  Lock,
+} from 'lucide-react'
+import ResumeCard from './ResumeCard'
+import WhatYouWillGetCard from './WhatYouWillGetCard'
+import ScanModal from './ScanModal'
 
 export default function Step1ResumeIntake({
-  profileData,
+  profileData = {},
   resumeSource,
   setResumeSource,
   customResumeFile,
   setCustomResumeFile,
-  onNext,
+  selectedRole,
+  setSelectedRole,
+  customJDText,
+  setCustomJDText,
+  activeRoleConfig,
+  onScanCompleted,
 }) {
-  const onboardingRole = profileData.targeted_role || 'Full Stack Engineer (SDE-1)'
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const hasOnboardingResume = !!profileData.resume?.name
+  const hasActiveResume = !!customResumeFile || hasOnboardingResume
+
+  const candidateName = profileData.full_name || profileData.name || 'Candidate Profile'
+  const candidateDegree = profileData.degree || 'B.Tech'
+  const candidateBranch = profileData.branch || 'Computer Science'
+  const candidateBatch = profileData.graduation_year || 'Batch 2026'
+  const onboardingRole = profileData.targeted_role || 'Web & Software Engineering'
+
+  const activeResumeName = customResumeFile
+    ? customResumeFile.name
+    : hasOnboardingResume
+    ? profileData.resume.name
+    : null
+
+  const activeResumeSize = customResumeFile
+    ? (customResumeFile.size / (1024 * 1024)).toFixed(2) + ' MB'
+    : hasOnboardingResume && profileData.resume?.size
+    ? (profileData.resume.size / (1024 * 1024)).toFixed(2) + ' MB'
+    : '1.24 MB' // // TODO: wire to API - default fallback size
+
+  const handleStartScanModal = () => {
+    if (hasActiveResume) {
+      setIsModalOpen(true)
+    }
+  }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-      <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 4px', fontFamily: 'Outfit, sans-serif' }}>
-          Step 1: Candidate Resume Baseline
-        </h3>
-        <p style={{ fontSize: '13.5px', color: 'var(--text-muted)' }}>
-          Confirm your active resume or upload an updated version to initialize the competency scanner.
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.3 }}
+      style={{ position: 'relative' }}
+    >
+      {/* ─── Ready-to-Scan Screen Header ─── */}
+      <div style={{ marginBottom: '24px' }}>
+        <h2
+          style={{
+            fontSize: 'clamp(20px, 2.6vw, 26px)',
+            fontWeight: 900,
+            fontFamily: 'Outfit, sans-serif',
+            color: 'var(--text)',
+            margin: '0 0 6px',
+            letterSpacing: '-0.015em',
+          }}
+        >
+          Step 1: Ready to Scan Your Resume
+        </h2>
+        <p
+          style={{
+            fontSize: '15px',
+            color: 'var(--text-muted)',
+            margin: 0,
+            lineHeight: 1.6,
+          }}
+        >
+          Your resume from onboarding has been loaded. Confirm your document and launch the audit to benchmark ATS fit.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '18px', marginBottom: '24px' }}>
-        {/* Option A: Existing Onboarding Resume */}
-        <div
-          onClick={() => setResumeSource('existing')}
-          style={{
-            background: resumeSource === 'existing' ? 'rgba(99, 102, 241, 0.08)' : 'var(--surface-glass)',
-            border: resumeSource === 'existing' ? '2px solid var(--primary)' : '1px solid var(--border)',
-            borderRadius: 'var(--radius-xl)',
-            padding: '24px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            position: 'relative',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
-                  background: 'var(--gradient-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <FileCheck size={20} color="#FFFFFF" />
-              </div>
-              <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 800, margin: 0 }}>Active Profile Resume</h4>
-                <span style={{ fontSize: '11.5px', color: 'var(--text-subtle)' }}>From Onboarding Baseline</span>
-              </div>
-            </div>
-
-            {resumeSource === 'existing' && <CheckCircle size={20} color="var(--primary)" />}
-          </div>
-
+      {/* ─── Compact Candidate Profile Bar ─── */}
+      <div
+        style={{
+          background: 'var(--surface-soft)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px',
+          padding: '14px 20px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div
             style={{
-              background: 'var(--surface-soft)',
-              padding: '12px 14px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border)',
-              marginBottom: '14px',
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: 'var(--gradient-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 14px var(--primary-glow)',
+              flexShrink: 0,
             }}
           >
-            <p style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 2px', color: 'var(--text)' }}>
-              {profileData.resume?.name || 'Candidate_Resume_Master.pdf'}
-            </p>
-            <p style={{ fontSize: '11px', color: '#10B981', fontWeight: 600, margin: 0 }}>
-              Verified Candidate Baseline Available
-            </p>
+            <UserCheck size={20} color="#FFFFFF" />
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            <span style={{ fontSize: '11px', background: 'var(--surface-soft)', padding: '3px 8px', borderRadius: '4px', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-              Target: {onboardingRole}
-            </span>
-            <span style={{ fontSize: '11px', background: 'var(--surface-soft)', padding: '3px 8px', borderRadius: '4px', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-              Degree: {profileData.degree || 'B.Tech'} ({profileData.branch || 'CSE'})
-            </span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <strong style={{ fontSize: '15px', color: 'var(--text)' }}>
+                {candidateName}
+              </strong>
+              <span
+                style={{
+                  fontSize: '10.5px',
+                  fontWeight: 800,
+                  color: 'var(--primary)',
+                  background: 'var(--primary-dim)',
+                  padding: '2px 8px',
+                  borderRadius: '99px',
+                }}
+              >
+                CANDIDATE PROFILE
+              </span>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                fontSize: '12.5px',
+                color: 'var(--text-subtle)',
+                marginTop: '3px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <GraduationCap size={13} color="#8B5CF6" />
+                {candidateDegree} ({candidateBranch})
+              </span>
+              <span>•</span>
+              <span>{candidateBatch}</span>
+              <span>•</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <ShieldCheck size={13} color="var(--primary)" />
+                Track: {onboardingRole}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Option B: Upload New / Updated CV */}
+        {/* Hint Pill: Target role chosen in next step */}
         <div
-          onClick={() => setResumeSource('custom')}
           style={{
-            background: resumeSource === 'custom' ? 'rgba(99, 102, 241, 0.08)' : 'var(--surface-glass)',
-            border: resumeSource === 'custom' ? '2px solid var(--primary)' : '1px solid var(--border)',
-            borderRadius: 'var(--radius-xl)',
-            padding: '24px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            position: 'relative',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '12px',
+            color: 'var(--text-muted)',
+            background: 'var(--surface)',
+            padding: '6px 12px',
+            borderRadius: '99px',
+            border: '1px solid var(--border)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
-                  background: 'var(--surface-soft)',
-                  border: '1px solid var(--border)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <UploadCloud size={20} color="var(--primary)" />
-              </div>
-              <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 800, margin: 0 }}>Upload Updated CV</h4>
-                <span style={{ fontSize: '11.5px', color: 'var(--text-subtle)' }}>PDF, DOCX format (Max 5MB)</span>
-              </div>
-            </div>
-
-            {resumeSource === 'custom' && <CheckCircle size={20} color="var(--primary)" />}
-          </div>
-
-          <div
-            style={{
-              border: '2px dashed var(--border)',
-              borderRadius: 'var(--radius-md)',
-              padding: '16px',
-              textAlign: 'center',
-              background: 'var(--surface-soft)',
-              marginBottom: '14px',
-            }}
-            onClick={(e) => {
-              e.stopPropagation()
-              const input = document.createElement('input')
-              input.type = 'file'
-              input.accept = '.pdf,.docx,.txt'
-              input.onchange = (evt) => {
-                const file = evt.target.files[0]
-                if (file) {
-                  setCustomResumeFile(file)
-                  setResumeSource('custom')
-                }
-              }
-              input.click()
-            }}
-          >
-            <p style={{ fontSize: '12.5px', fontWeight: 700, margin: 0, color: 'var(--text)' }}>
-              {customResumeFile ? customResumeFile.name : 'Click or Drag New CV Here'}
-            </p>
-            <p style={{ fontSize: '11px', color: 'var(--text-subtle)', margin: '2px 0 0' }}>
-              {customResumeFile ? 'Ready for multi-signal extraction' : 'Browse local files'}
-            </p>
-          </div>
-
-          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: 0 }}>
-            Upload your latest resume if you added new projects, internships, or certifications.
-          </p>
+          <HelpCircle size={14} color="var(--primary)" />
+          <span>You&apos;ll choose your target role in the next step</span>
         </div>
       </div>
 
-      {/* Action Footer */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-        <button
-          onClick={onNext}
-          className="btn btn-primary"
+      {/* ─── Desktop 2-Column Layout (8px Grid & 16px Radius) ─── */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '24px',
+          alignItems: 'start',
+          marginBottom: '36px',
+        }}
+      >
+        {/* Left Column: Hero Resume Card & Slim Replace Row */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <ResumeCard
+            profileData={profileData}
+            customResumeFile={customResumeFile}
+            setCustomResumeFile={setCustomResumeFile}
+            setResumeSource={setResumeSource}
+            onReplaceSuccess={() => {
+              // Successfully replaced CV
+            }}
+          />
+        </div>
+
+        {/* Right Column: "What You'll Get" Deliverables Card */}
+        <div>
+          <WhatYouWillGetCard />
+        </div>
+      </div>
+
+      {/* ─── Sticky Bottom Action Bar ─── */}
+      <div
+        style={{
+          position: 'sticky',
+          bottom: '20px',
+          zIndex: 100,
+          background: 'var(--surface-glass)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid var(--border-focus)',
+          borderRadius: '16px',
+          padding: '16px 24px',
+          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
+      >
+        <div>
+          <strong style={{ fontSize: '15px', color: 'var(--text)', display: 'block' }}>
+            Ready to Discover Missing Skills?
+          </strong>
+          <span style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>
+            ~30 sec · Your CV stays private and is benchmarked in memory
+          </span>
+        </div>
+
+        <motion.button
+          whileHover={hasActiveResume ? { scale: 1.04, y: -2 } : {}}
+          whileTap={hasActiveResume ? { scale: 0.98 } : {}}
+          onClick={handleStartScanModal}
+          disabled={!hasActiveResume}
+          className="btn-rgb-glow"
+          type="button"
           style={{
-            padding: '12px 28px',
-            borderRadius: '99px',
+            padding: '13px 32px',
             fontSize: '14px',
             fontWeight: 800,
+            cursor: !hasActiveResume ? 'not-allowed' : 'pointer',
+            opacity: !hasActiveResume ? 0.6 : 1,
+            display: 'inline-flex',
+            alignItems: 'center',
             gap: '8px',
-            boxShadow: '0 4px 16px var(--primary-glow)',
-            cursor: 'pointer',
           }}
         >
-          <span>Continue to Step 2: Target Benchmark</span>
+          <Sparkles size={16} />
+          <span>Start Skill Gap Scan</span>
           <ArrowRight size={16} />
-        </button>
+        </motion.button>
       </div>
+
+      {/* ─── Hero Scan Modal (Phase 1 & Phase 2) ─── */}
+      <ScanModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        activeResumeName={activeResumeName}
+        activeResumeSize={activeResumeSize}
+        selectedRole={selectedRole}
+        setSelectedRole={setSelectedRole}
+        customJDText={customJDText}
+        setCustomJDText={setCustomJDText}
+        onScanComplete={(scanResult) => {
+          setIsModalOpen(false)
+          onScanCompleted(scanResult)
+        }}
+      />
     </motion.div>
   )
 }

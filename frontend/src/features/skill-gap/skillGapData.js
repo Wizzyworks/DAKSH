@@ -2,32 +2,28 @@
 
 export const PRESET_ROLES = [
   {
-    id: 'sde-fullstack',
-    title: 'Full Stack Engineer (SDE-1)',
-    tier: 'Product Unicorn / High Growth',
+    id: 'fullstack',
+    title: 'Full Stack Web Developer',
     coreSkills: ['React.js', 'Node.js', 'Express', 'PostgreSQL', 'Redis', 'Docker', 'REST APIs', 'Git'],
-    description: 'Build responsive web apps with performant client UI and scalable RESTful backend services.',
+    description: 'Build modern web applications with responsive frontend and robust backend APIs.',
   },
   {
-    id: 'sde-frontend',
-    title: 'Frontend Engineer (React/Next.js)',
-    tier: 'Tier-1 Tech / Product Companies',
-    coreSkills: ['React.js', 'TypeScript', 'Next.js', 'TailwindCSS', 'Redux/Zustand', 'Web Performance', 'Jest'],
-    description: 'Craft responsive, accessible user interfaces with clean state management and animations.',
+    id: 'frontend',
+    title: 'Frontend Developer',
+    coreSkills: ['React.js', 'TypeScript', 'Next.js', 'CSS/Tailwind', 'State Management', 'Web Performance', 'Git'],
+    description: 'Build fast, responsive, and accessible user interfaces and web applications.',
   },
   {
-    id: 'sde-backend',
-    title: 'Backend Engineer (Node/Python/Go)',
-    tier: 'Tier-1 SDE / Distributed Systems',
-    coreSkills: ['Node.js', 'Python', 'PostgreSQL', 'Redis', 'Docker', 'REST APIs', 'SQL Indexing', 'System Design'],
-    description: 'Design robust APIs, caching layers, database schemas, and microservice communication.',
+    id: 'backend',
+    title: 'Backend Developer',
+    coreSkills: ['Node.js', 'Python', 'PostgreSQL', 'Redis', 'Docker', 'REST APIs', 'Database Optimization', 'Git'],
+    description: 'Design scalable server architectures, database models, and API endpoints.',
   },
   {
-    id: 'sde-aiml',
-    title: 'AI / ML Engineer (GenAI & Python)',
-    tier: 'AI Labs & Innovation Teams',
-    coreSkills: ['Python', 'PyTorch', 'HuggingFace', 'FastAPI', 'Vector Databases', 'LangChain', 'Data Structures'],
-    description: 'Build RAG pipelines, fine-tune open-weights models, and deploy scalable inference microservices.',
+    id: 'aiml',
+    title: 'AI / ML Engineer',
+    coreSkills: ['Python', 'PyTorch', 'FastAPI', 'Vector Databases', 'LangChain', 'Data Structures', 'Git'],
+    description: 'Develop intelligent AI applications, machine learning workflows, and data pipelines.',
   },
 ]
 

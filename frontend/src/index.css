@@ -615,3 +615,95 @@ p {
   flex-shrink: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
+
+/* ─── RGB Gaming / Dev Cockpit Glow Card ────────────────────────────────────── */
+@keyframes rgb-spin {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.rgb-glow-card {
+  position: relative;
+  background: linear-gradient(115deg, #2563EB, #8B5CF6, #EC4899, #06B6D4, #10B981, #2563EB);
+  background-size: 300% 300%;
+  animation: rgb-spin 9s ease infinite;
+  padding: 2px;
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 0 25px -4px rgba(59, 130, 246, 0.28), 0 0 15px -4px rgba(236, 72, 153, 0.2);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rgb-glow-card:hover {
+  box-shadow: 0 0 40px 2px rgba(59, 130, 246, 0.42), 0 0 30px 2px rgba(236, 72, 153, 0.3);
+}
+
+.rgb-glow-inner {
+  background: var(--surface-glass);
+  backdrop-filter: blur(28px);
+  border-radius: calc(var(--radius-2xl) - 2px);
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Premium RGB Action Button (Section 6 Requirements) ─────────────────────── */
+@keyframes rgb-btn-glow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.btn-rgb-glow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 35%, #7C3AED 70%, #EC4899 100%);
+  background-size: 250% 250%;
+  animation: rgb-btn-glow 8s ease infinite;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-full);
+  padding: 13px 32px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.38), 0 0 16px -2px rgba(124, 58, 237, 0.28);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.btn-rgb-glow:hover {
+  box-shadow: 0 8px 30px 2px rgba(37, 99, 235, 0.48), 0 0 25px 2px rgba(236, 72, 153, 0.38);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.btn-rgb-glow:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.btn-rgb-glow:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-rgb-glow {
+    animation: none;
+    transition: none;
+  }
+}
