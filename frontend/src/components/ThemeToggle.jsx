@@ -9,30 +9,34 @@ export default function ThemeToggle() {
   return (
     <motion.button
       onClick={toggleTheme}
-      whileTap={{ scale: 0.92 }}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.95 }}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       style={{
-        width: '36px',
-        height: '36px',
+        width: '34px',
+        height: '34px',
         borderRadius: '8px',
         border: '1px solid var(--border)',
-        background: 'var(--surface-soft)',
+        background: 'var(--glass)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
         color: 'var(--text-muted)',
-        transition: 'all 200ms ease',
+        transition: 'border-color 180ms ease, color 180ms ease, background-color 180ms ease',
         flexShrink: 0,
+        boxShadow: 'var(--shadow-sm)',
       }}
     >
       <motion.div
         key={theme}
-        initial={{ opacity: 0, rotate: -30 }}
-        animate={{ opacity: 1, rotate: 0 }}
-        transition={{ duration: 0.2 }}
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.15 }}
       >
-        {isDark ? <Sun size={16} /> : <Moon size={16} />}
+        {isDark ? <Sun size={15} /> : <Moon size={15} />}
       </motion.div>
     </motion.button>
   )

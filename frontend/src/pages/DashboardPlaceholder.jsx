@@ -50,7 +50,7 @@ export default function DashboardPlaceholder() {
               boxShadow: '0 4px 20px var(--primary-glow)',
             }}
           >
-            <BrainCircuit size={36} color="#FFFFFF" />
+            <BrainCircuit size={36} color="var(--on-acc)" />
           </div>
 
           {/* Status Badge */}

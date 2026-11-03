@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-export default function ProgressIndicator({ steps, currentStep }) {
+export default function ProgressIndicator({ steps, currentStep, onStepClick }) {
   return (
     <div style={{ marginBottom: '32px' }}>
       {/* Steps bubbles row */}
@@ -17,7 +17,7 @@ export default function ProgressIndicator({ steps, currentStep }) {
                 flex: i < steps.length - 1 ? 1 : undefined,
               }}
             >
-              <div className={`step-indicator-bubble ${status}`}>
+              <div className={`step-indicator-bubble ${status}`} onClick={() => onStepClick && onStepClick(i)} style={onStepClick ? { cursor: 'pointer' } : {}} title={onStepClick ? `Go to Step ${i + 1}: ${step.label}` : undefined}>
                 {status === 'done' ? (
                   <Check size={18} strokeWidth={3} />
                 ) : (

@@ -1,7 +1,7 @@
 import { FileText } from 'lucide-react'
 import ComingSoonView from '../../components/ComingSoonView'
 
-export default function ResumeBuilderView({ onNavigateToActive }) {
+export default function ResumeBuilderView({ onNavigateToActive, onNavigateToHome }) {
   return (
     <ComingSoonView
       title="AI Resume Builder & LaTeX Optimizer"
@@ -15,6 +15,7 @@ export default function ResumeBuilderView({ onNavigateToActive }) {
         'Direct Jinja2 LaTeX source (.tex) and compiled PDF downloads',
       ]}
       onNavigateToActive={onNavigateToActive}
+      onNavigateToHome={onNavigateToHome}
     />
   )
 }

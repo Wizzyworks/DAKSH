@@ -117,7 +117,7 @@ export default function ProductPreview() {
                   border: 'none',
                   cursor: 'pointer',
                   background: selectedIdx === idx ? 'var(--primary)' : 'transparent',
-                  color: selectedIdx === idx ? '#FFFFFF' : 'var(--text-muted)',
+                  color: selectedIdx === idx ? 'var(--on-acc)' : 'var(--text-muted)',
                   transition: 'all 0.2s',
                 }}
               >

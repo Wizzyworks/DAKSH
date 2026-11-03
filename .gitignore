@@ -96,3 +96,15 @@ coverage/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+# AI Agent Frameworks, Skills & Tools
+.agents/
+agents/
+.codex/
+skills-lock.json
+.impeccable/
+
+# Raw Logos & Design Assets
+logo/
+logos/

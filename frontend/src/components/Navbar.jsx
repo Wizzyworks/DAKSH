@@ -102,7 +102,7 @@ export default function Navbar() {
               Methodology
             </button>
             <Link
-              to="/dashboard"
+              to="/skill-gap"
               className="nav-link"
               style={{ cursor: 'pointer' }}
             >

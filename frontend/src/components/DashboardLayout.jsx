@@ -10,8 +10,22 @@ export default function DashboardLayout({ activeTab, onSelectTab, children }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
+  const tabLabels = {
+    'skill-gap': 'Skill Gap Analysis',
+    'home': 'Home & Readiness',
+    'learning-roadmap': 'Learning Hub',
+    'setu-ai': 'SETU AI Assistant',
+    'interview-room': 'Interview Room',
+    'resume-builder': 'Resume Builder',
+    'job-search': 'Job Search',
+    'settings': 'Settings',
+  }
+
+  const currentTitle = tabLabels[activeTab] || 'Workspace'
+
   return (
     <div
+      className="daksh-dashboard-root"
       style={{
         minHeight: '100vh',
         display: 'flex',
@@ -19,8 +33,25 @@ export default function DashboardLayout({ activeTab, onSelectTab, children }) {
         backgroundImage: 'var(--bg-gradient)',
         color: 'var(--text)',
         position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Faint ambient indigo/blue depth blob for glassmorphism */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: '-180px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '960px',
+          height: '460px',
+          background: 'radial-gradient(ellipse 65% 55% at 50% 50%, var(--primary-glow), transparent 70%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+
       {/* 1. Left Navigation Sidebar */}
       <Sidebar
         activeTab={activeTab}
@@ -32,29 +63,32 @@ export default function DashboardLayout({ activeTab, onSelectTab, children }) {
       />
 
       {/* 2. Right Main Workspace Viewport */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative', zIndex: 1 }}>
         
-        {/* Mobile Top Header (Hidden on Desktop) */}
-        <div
+        {/* Top Header Bar (Desktop & Mobile, calm Linear/Vercel style) */}
+        <header
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '12px 18px',
+            padding: '12px 28px',
             borderBottom: '1px solid var(--border)',
-            background: 'var(--surface-glass)',
+            background: 'var(--glass)',
             backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             position: 'sticky',
             top: 0,
             zIndex: 30,
           }}
-          className="mobile-top-bar"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Mobile hamburger & brand / Desktop breadcrumb */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               onClick={() => setIsMobileOpen(true)}
+              aria-label="Open Navigation Menu"
+              className="lg:hidden"
               style={{
-                background: 'var(--surface-soft)',
+                background: 'var(--glass)',
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
                 padding: '6px',
@@ -62,35 +96,85 @@ export default function DashboardLayout({ activeTab, onSelectTab, children }) {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
-              <Menu size={18} />
+              <Menu size={17} />
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '15px', fontWeight: 900, color: 'var(--text)', fontFamily: 'Outfit, sans-serif' }}>
-                DAKSH
-              </span>
-              <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 800 }}>
-                PIPELINE
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => onSelectTab('home')}
+                title="Go to Home"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  fontSize: '12px',
+                  color: 'var(--text-muted)',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  textDecoration: activeTab !== 'home' ? 'underline' : 'none',
+                  textUnderlineOffset: '2px',
+                }}
+              >
+                Workspace
+              </button>
+              <span style={{ fontSize: '12px', color: 'var(--text-subtle)' }}>/</span>
+              <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' }}>
+                {currentTitle}
               </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Right actions: Subtle status pill & Minimal Theme Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '3px 9px',
+                borderRadius: '9999px',
+                background: 'var(--glass)',
+                border: '1px solid var(--border)',
+                fontSize: '11.5px',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <span
+                style={{
+                  width: '5px',
+                  height: '5px',
+                  borderRadius: '50%',
+                  background: 'var(--success)',
+                  display: 'inline-block',
+                }}
+              />
+              <span style={{ fontWeight: 500 }}>Live Sync</span>
+            </div>
+
             <ThemeToggle />
           </div>
-        </div>
+        </header>
 
         {/* Dynamic Page Content */}
-        <main style={{ flex: 1, padding: '32px 28px 80px', overflowY: 'auto' }}>
+        <main
+          id="daksh-main-scroll"
+          style={{
+            flex: 1,
+            padding: '28px 32px 80px',
+            overflowY: 'auto',
+            position: 'relative',
+          }}
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
             >
               {children}
             </motion.div>
@@ -100,11 +184,13 @@ export default function DashboardLayout({ activeTab, onSelectTab, children }) {
 
       <style>{`
         @media (min-width: 1024px) {
-          .mobile-top-bar {
-            display: none !important;
+          .daksh-dashboard-root {
+            height: 100vh !important;
+            overflow: hidden !important;
           }
         }
       `}</style>
     </div>
   )
 }
+

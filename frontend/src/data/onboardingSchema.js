@@ -175,6 +175,33 @@ const ONBOARDING_SCHEMA = [
         label: 'Target Companies (Multiple Select)',
         required: true,
         hint: 'DAKSH customizes question rubrics for all selected companies.',
+        groups: [
+          {
+            category: 'Tier-1 & Product Leaders',
+            options: [
+              { value: 'amazon', label: 'Amazon (SDE-1 Campus)' },
+            ],
+          },
+          {
+            category: 'Mass Recruitment & High-Package Digital Drives',
+            options: [
+              { value: 'tcs', label: 'TCS (Prime & Digital)' },
+              { value: 'infosys', label: 'Infosys (SP & DSE)' },
+              { value: 'cognizant', label: 'Cognizant (GenC Next)' },
+              { value: 'wipro', label: 'Wipro (Turbo & Elite)' },
+              { value: 'accenture', label: 'Accenture (Advanced ASE)' },
+              { value: 'deloitte', label: 'Deloitte (Tech Analyst)' },
+              { value: 'capgemini', label: 'Capgemini (Exceller)' },
+            ],
+          },
+          {
+            category: 'High-Growth Startups & FinTech Ecosystem',
+            options: [
+              { value: 'startups', label: 'High-Growth Tech Startups' },
+              { value: 'fintech', label: 'FinTech & Banking MNCs' },
+            ],
+          },
+        ],
         options: [
           { value: 'tcs', label: 'TCS (Prime & Digital)' },
           { value: 'infosys', label: 'Infosys (SP & DSE)' },
@@ -192,16 +219,9 @@ const ONBOARDING_SCHEMA = [
   },
   {
     id: 'step-profile',
-    label: 'Resume & Project Links',
-    description: 'DAKSH scans your resume to generate customized questions tailored to your exact projects.',
+    label: 'Portfolio & Profile Links',
+    description: 'Share your GitHub and LinkedIn profiles so DAKSH can personalize your engineering persona (resume will be analyzed directly in Skill Gap).',
     fields: [
-      {
-        id: 'resume',
-        type: 'file',
-        label: 'Upload Resume (PDF)',
-        required: false,
-        hint: 'Upload your latest resume (PDF preferred, max 5 MB). DAKSH generates questions from your actual bullet points.',
-      },
       {
         id: 'github_link',
         type: 'url',

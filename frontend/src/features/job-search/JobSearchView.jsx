@@ -1,7 +1,7 @@
 import { Briefcase } from 'lucide-react'
 import ComingSoonView from '../../components/ComingSoonView'
 
-export default function JobSearchView({ onNavigateToActive }) {
+export default function JobSearchView({ onNavigateToActive, onNavigateToHome }) {
   return (
     <ComingSoonView
       title="AI Job Search & Opportunity Hub"
@@ -15,6 +15,7 @@ export default function JobSearchView({ onNavigateToActive }) {
         '1-Click direct apply links & personalized alert notifications',
       ]}
       onNavigateToActive={onNavigateToActive}
+      onNavigateToHome={onNavigateToHome}
     />
   )
 }

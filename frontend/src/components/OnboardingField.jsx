@@ -69,6 +69,47 @@ export default function OnboardingField({ config, value, onChange, error }) {
         onChange([...selected, v])
       }
     }
+
+    if (config.groups) {
+      return (
+        <FormField id={id} label={label} error={error} hint={hint} required={required}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '6px' }}>
+            {config.groups.map((group) => (
+              <div
+                key={group.category}
+                style={{
+                  background: 'var(--surface-soft)',
+                  padding: '12px 14px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+                  {group.category}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {group.options.map((opt) => {
+                    const isSelected = selected.includes(opt.value)
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`interactive-chip ${isSelected ? 'active' : ''}`}
+                        onClick={() => toggle(opt.value)}
+                      >
+                        {isSelected && <Check size={14} color="var(--primary-bright)" />}
+                        <span>{opt.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </FormField>
+      )
+    }
+
     return (
       <FormField id={id} label={label} error={error} hint={hint} required={required}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
@@ -150,7 +191,7 @@ function FileUploadField({ id, label, error, hint, required, value, onChange }) 
               justifyContent: 'center',
             }}
           >
-            <File size={20} color="#FFFFFF" />
+            <File size={20} color="var(--on-acc)" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

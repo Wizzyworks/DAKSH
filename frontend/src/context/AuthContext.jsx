@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
+  const [isHydrated, setIsHydrated] = useState(false)
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('daksh-user')
@@ -22,6 +23,11 @@ export function AuthProvider({ children }) {
       return false
     }
   })
+
+  useEffect(() => {
+    // Client-side hydration gate
+    setIsHydrated(true)
+  }, [])
 
   const login = async (email, password) => {
     await new Promise((r) => setTimeout(r, 800))
@@ -73,6 +79,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       value={{
+        isHydrated,
         user,
         onboardingComplete,
         login,
@@ -83,6 +90,7 @@ export function AuthProvider({ children }) {
     >
       {children}
     </AuthContext.Provider>
+
   )
 }
 

@@ -68,7 +68,7 @@ export default function SignupPage() {
 
   return (
     <AuthLayout
-      title="Create Your  Account"
+      title="Create Your Account"
       subtitle="Start AI-guided campus placement prep — 100% Free"
     >
       <form onSubmit={handleSubmit} noValidate>

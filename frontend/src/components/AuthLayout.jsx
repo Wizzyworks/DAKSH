@@ -96,7 +96,7 @@ export default function AuthLayout({ children, title, subtitle }) {
                   boxShadow: '0 2px 10px var(--primary-glow)',
                 }}
               >
-                <GraduationCap size={22} color="#FFFFFF" strokeWidth={2.2} />
+                <GraduationCap size={22} color="var(--on-acc)" strokeWidth={2.2} />
               </div>
               <div style={{ textAlign: 'left' }}>
                 <span
@@ -105,7 +105,7 @@ export default function AuthLayout({ children, title, subtitle }) {
                     fontWeight: 900,
                     color: 'var(--text)',
                     letterSpacing: '-0.03em',
-                    fontFamily: 'Outfit, sans-serif',
+                    fontFamily: 'var(--font-serif)',
                     display: 'block',
                     lineHeight: 1,
                   }}
@@ -113,7 +113,7 @@ export default function AuthLayout({ children, title, subtitle }) {
                   DAKSH
                 </span>
                 <span style={{ fontSize: '11px', color: 'var(--text-subtle)', fontWeight: 600 }}>
-                  HireForge AI Platform
+                  Placement Intelligence Platform
                 </span>
               </div>
             </Link>

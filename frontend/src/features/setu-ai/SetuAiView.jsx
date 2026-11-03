@@ -1,7 +1,7 @@
 import { Bot } from 'lucide-react'
 import ComingSoonView from '../../components/ComingSoonView'
 
-export default function SetuAiView({ onNavigateToActive }) {
+export default function SetuAiView({ onNavigateToActive, onNavigateToHome }) {
   return (
     <ComingSoonView
       title="SETU AI — Neural Placement Mentor & Chatbot"
@@ -15,6 +15,7 @@ export default function SetuAiView({ onNavigateToActive }) {
         'Career pathway & campus placement strategy counseling',
       ]}
       onNavigateToActive={onNavigateToActive}
+      onNavigateToHome={onNavigateToHome}
     />
   )
 }

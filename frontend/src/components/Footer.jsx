@@ -39,9 +39,9 @@ export default function Footer() {
                   justifyContent: 'center',
                 }}
               >
-                <GraduationCap size={16} color="#FFFFFF" />
+                <GraduationCap size={16} color="var(--sec-ink)" />
               </div>
-              <span style={{ fontSize: '17px', fontWeight: 900, color: 'var(--text)', fontFamily: 'Outfit, sans-serif' }}>
+              <span style={{ fontSize: '17px', fontWeight: 900, color: 'var(--text)', fontFamily: 'var(--font-serif)' }}>
                 DAKSH
               </span>
             </div>

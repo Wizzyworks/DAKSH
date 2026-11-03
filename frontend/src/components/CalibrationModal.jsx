@@ -136,7 +136,7 @@ export default function CalibrationModal({ isOpen, onComplete, targetRole = 'Sof
                 boxShadow: '0 8px 30px var(--primary-glow)',
               }}
             >
-              <BrainCircuit size={42} color="#FFFFFF" strokeWidth={2} />
+              <BrainCircuit size={42} color="var(--on-acc)" strokeWidth={2} />
             </div>
           </div>
 
@@ -170,7 +170,7 @@ export default function CalibrationModal({ isOpen, onComplete, targetRole = 'Sof
               color: 'var(--text)',
               marginBottom: '6px',
               letterSpacing: '-0.02em',
-              fontFamily: 'Outfit, sans-serif',
+              fontFamily: 'var(--font-serif)',
             }}
           >
             Calibrating Your Persona...

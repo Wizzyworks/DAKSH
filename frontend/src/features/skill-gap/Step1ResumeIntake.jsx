@@ -1,284 +1,603 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef, useLayoutEffect, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  UserCheck,
-  ShieldCheck,
-  GraduationCap,
-  Sparkles,
+  ArrowLeft,
+  UploadCloud,
+  FileText,
+  CheckCircle2,
   ArrowRight,
-  HelpCircle,
   Lock,
+  Sparkles,
+  RotateCcw,
+  AlertCircle,
+  FileCode,
+  ShieldCheck,
+  Zap,
 } from 'lucide-react'
-import ResumeCard from './ResumeCard'
 import WhatYouWillGetCard from './WhatYouWillGetCard'
 import ScanModal from './ScanModal'
+import { Button, TOKENS, CornerHUD, HUDTag } from './ui/SkillGapPrimitives'
 
 export default function Step1ResumeIntake({
-  profileData = {},
-  resumeSource,
-  setResumeSource,
-  customResumeFile,
-  setCustomResumeFile,
+  onNavigateToHome,
+  resumeFile,
+  setResumeFile,
   selectedRole,
   setSelectedRole,
   customJDText,
   setCustomJDText,
-  activeRoleConfig,
   onScanCompleted,
+  onInvalidateDownstream,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState(resumeFile || null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [isParsing, setIsParsing] = useState(false)
+  const [parsingProgress, setParsingProgress] = useState(0)
+  const fileInputRef = useRef(null)
 
-  const hasOnboardingResume = !!profileData.resume?.name
-  const hasActiveResume = !!customResumeFile || hasOnboardingResume
+  // Sync when resumeFile updates
+  useEffect(() => {
+    if (resumeFile && !uploadedFile) {
+      setUploadedFile(resumeFile)
+    }
+  }, [resumeFile])
 
-  const candidateName = profileData.full_name || profileData.name || 'Candidate Profile'
-  const candidateDegree = profileData.degree || 'B.Tech'
-  const candidateBranch = profileData.branch || 'Computer Science'
-  const candidateBatch = profileData.graduation_year || 'Batch 2026'
-  const onboardingRole = profileData.targeted_role || 'Web & Software Engineering'
+  // Scroll reset to top synchronously
+  useLayoutEffect(() => {
+    const mainEl = document.getElementById('daksh-main-scroll') || document.querySelector('main')
+    if (mainEl) mainEl.scrollTop = 0
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [])
 
-  const activeResumeName = customResumeFile
-    ? customResumeFile.name
-    : hasOnboardingResume
-    ? profileData.resume.name
-    : null
+  // Validate and handle file upload with interactive parsing animation
+  const handleFile = (file) => {
+    setUploadError('')
+    if (!file) return
 
-  const activeResumeSize = customResumeFile
-    ? (customResumeFile.size / (1024 * 1024)).toFixed(2) + ' MB'
-    : hasOnboardingResume && profileData.resume?.size
-    ? (profileData.resume.size / (1024 * 1024)).toFixed(2) + ' MB'
-    : '1.24 MB' // // TODO: wire to API - default fallback size
+    const validExtensions = ['.pdf', '.docx', '.txt']
+    const hasValidExt = validExtensions.some((ext) =>
+      file.name.toLowerCase().endsWith(ext)
+    )
 
-  const handleStartScanModal = () => {
-    if (hasActiveResume) {
-      setIsModalOpen(true)
+    if (!hasValidExt) {
+      setUploadError('Invalid format. Please upload a PDF or DOCX file (max 5 MB).')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File exceeds 5 MB limit. Please upload a smaller file.')
+      return
+    }
+
+    // Launch 1.2s smooth document ingestion animation
+    setIsParsing(true)
+    setParsingProgress(25)
+
+    setTimeout(() => {
+      setParsingProgress(70)
+    }, 400)
+
+    setTimeout(() => {
+      setParsingProgress(100)
+    }, 850)
+
+    setTimeout(() => {
+      setUploadedFile(file)
+      if (setResumeFile) setResumeFile(file)
+      if (onInvalidateDownstream) onInvalidateDownstream()
+      try {
+        sessionStorage.setItem('daksh-sg-resume-name', file.name)
+        sessionStorage.setItem('daksh-sg-resume-size', file.size.toString())
+      } catch {}
+      setIsParsing(false)
+    }, 1150)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0])
     }
   }
 
+  const activeFile = uploadedFile || resumeFile
+  const activeFileSizeFormatted = activeFile
+    ? ((activeFile.size || 1250000) / (1024 * 1024)).toFixed(2) + ' MB'
+    : '1.25 MB'
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.3 }}
-      style={{ position: 'relative' }}
+      exit={{ opacity: 0, y: 6 }}
+      transition={{ duration: 0.22, ease: 'easeOut' }}
+      style={{ position: 'relative', paddingBottom: '36px' }}
     >
-      {/* ─── Ready-to-Scan Screen Header ─── */}
-      <div style={{ marginBottom: '24px' }}>
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) handleFile(e.target.files[0])
+        }}
+        accept=".pdf,.docx,.txt"
+        style={{ display: 'none' }}
+      />
+
+      {/* ─── Clean Step Header ─── */}
+      <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+          <span
+            className="daksh-glass-pill"
+            style={{
+              fontSize: '11px',
+              fontFamily: 'JetBrains Mono, monospace',
+              color: 'var(--accent)',
+              padding: '3px 10px',
+              borderRadius: '99px',
+            }}
+          >
+            Step 01 • Intake &amp; Scan
+          </span>
+        </div>
         <h2
+          data-step-heading="true"
           style={{
-            fontSize: 'clamp(20px, 2.6vw, 26px)',
-            fontWeight: 900,
-            fontFamily: 'Outfit, sans-serif',
+            fontSize: 'clamp(20px, 2.5vw, 24px)',
+            fontWeight: 650,
+            letterSpacing: '-0.02em',
             color: 'var(--text)',
             margin: '0 0 6px',
-            letterSpacing: '-0.015em',
           }}
         >
-          Step 1: Ready to Scan Your Resume
+          Upload Your Resume
         </h2>
         <p
           style={{
-            fontSize: '15px',
+            fontSize: '13.5px',
             color: 'var(--text-muted)',
-            margin: 0,
-            lineHeight: 1.6,
+            margin: '0 auto',
+            maxWidth: '620px',
+            lineHeight: 1.55,
           }}
         >
-          Your resume from onboarding has been loaded. Confirm your document and launch the audit to benchmark ATS fit.
+          Upload your latest CV to benchmark technical skills against market requirements, discover high-impact gaps, and generate your calibrated roadmap.
         </p>
       </div>
 
-      {/* ─── Compact Candidate Profile Bar ─── */}
-      <div
-        style={{
-          background: 'var(--surface-soft)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '14px 20px',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              background: 'var(--gradient-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px var(--primary-glow)',
-              flexShrink: 0,
-            }}
-          >
-            <UserCheck size={20} color="#FFFFFF" />
-          </div>
-
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <strong style={{ fontSize: '15px', color: 'var(--text)' }}>
-                {candidateName}
-              </strong>
-              <span
-                style={{
-                  fontSize: '10.5px',
-                  fontWeight: 800,
-                  color: 'var(--primary)',
-                  background: 'var(--primary-dim)',
-                  padding: '2px 8px',
-                  borderRadius: '99px',
-                }}
-              >
-                CANDIDATE PROFILE
-              </span>
-            </div>
-
+      {/* ─── Centered Layout ─── */}
+      <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Main Column: Upload Dropzone & Action Bar */}
+        <div style={{ width: '100%' }}>
+          {isParsing ? (
+            /* FILE PARSING CARD */
             <div
+              className="daksh-glass-card"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontSize: '12.5px',
-                color: 'var(--text-subtle)',
-                marginTop: '3px',
-                flexWrap: 'wrap',
+                borderRadius: '12px',
+                padding: '36px 28px',
+                textAlign: 'center',
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <GraduationCap size={13} color="#8B5CF6" />
-                {candidateDegree} ({candidateBranch})
-              </span>
-              <span>•</span>
-              <span>{candidateBatch}</span>
-              <span>•</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <ShieldCheck size={13} color="var(--primary)" />
-                Track: {onboardingRole}
-              </span>
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '12px',
+                  background: 'var(--accent-dim)',
+                  border: '1px solid var(--border-accent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                  color: 'var(--accent)',
+                }}
+              >
+                <FileCode size={28} />
+              </div>
+
+              <h3
+                style={{
+                  fontSize: '17px',
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  margin: '0 0 6px',
+                }}
+              >
+                Parsing Document Structure...
+              </h3>
+
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px' }}>
+                Extracting technical skills, frameworks, and verified experiences
+              </p>
+
+              {/* Progress bar */}
+              <div
+                style={{
+                  height: '4px',
+                  width: '100%',
+                  maxWidth: '360px',
+                  background: 'var(--border)',
+                  borderRadius: '99px',
+                  overflow: 'hidden',
+                  margin: '0 auto',
+                }}
+              >
+                <motion.div
+                  initial={{ width: '0%' }}
+                  animate={{ width: `${parsingProgress}%` }}
+                  transition={{ duration: 0.25 }}
+                  style={{
+                    height: '100%',
+                    background: 'var(--gradient-primary)',
+                    borderRadius: '99px',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginTop: '12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-muted)' }}>
+                {parsingProgress}% Analyzed
+              </div>
             </div>
-          </div>
+          ) : !activeFile ? (
+            /* 1. FRESH DROPZONE ─── */
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className="daksh-glass-card"
+              style={{
+                borderRadius: '12px',
+                padding: '44px 24px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                border: isDragging
+                  ? '1.5px dashed var(--accent)'
+                  : '1.5px dashed var(--border-strong)',
+                background: isDragging ? 'var(--accent-dim)' : 'var(--glass)',
+                transition: 'all 0.18s ease',
+                position: 'relative',
+              }}
+            >
+              <div
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  borderRadius: '12px',
+                  background: 'var(--accent-dim)',
+                  border: '1px solid var(--border-accent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                  color: 'var(--accent)',
+                }}
+              >
+                <UploadCloud size={26} />
+              </div>
+
+              <h3
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  margin: '0 0 6px',
+                }}
+              >
+                {isDragging ? 'Drop resume file to upload' : 'Click or drag your resume to upload'}
+              </h3>
+
+              <p
+                style={{
+                  fontSize: '13px',
+                  color: 'var(--text-muted)',
+                  margin: '0 0 16px',
+                }}
+              >
+                PDF, DOCX, or TXT up to 5 MB
+              </p>
+
+              {/* Supported format chips */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
+                {['PDF', 'DOCX', 'TXT'].map((ext) => (
+                  <span
+                    key={ext}
+                    className="daksh-glass-pill"
+                    style={{
+                      fontSize: '10.5px',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      fontWeight: 500,
+                      color: 'var(--text-muted)',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    .{ext}
+                  </span>
+                ))}
+              </div>
+
+              <div style={{ display: 'inline-block' }}>
+                <Button size="md" variant="primary">
+                  Browse Files
+                </Button>
+              </div>
+
+              {uploadError && (
+                <div
+                  style={{
+                    marginTop: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    color: 'var(--error)',
+                    fontWeight: 500,
+                  }}
+                >
+                  <AlertCircle size={15} />
+                  <span>{uploadError}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* 2. UPLOADED RESUME READY CARD ─── */
+            <div
+              className="daksh-glass-card"
+              style={{
+                borderRadius: '12px',
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '18px',
+                position: 'relative',
+              }}
+            >
+              {/* File details row */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '16px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '48px',
+                      borderRadius: '8px',
+                      background: 'var(--accent-dim)',
+                      border: '1px solid var(--border-accent)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <FileText size={20} color="var(--accent)" />
+                    <span style={{ fontSize: '9px', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace', color: 'var(--accent)', marginTop: '2px' }}>
+                      DOC
+                    </span>
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>
+                        {activeFile?.name || 'Resume.pdf'}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          color: 'var(--success)',
+                          background: 'var(--success-dim)',
+                          border: '1px solid rgba(95, 176, 143, 0.25)',
+                          padding: '2px 8px',
+                          borderRadius: '99px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <CheckCircle2 size={12} strokeWidth={2.2} /> Ready
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'JetBrains Mono, monospace' }}>
+                      <span>{activeFileSizeFormatted}</span> • <span style={{ color: 'var(--success)' }}>Verified &amp; Parsed</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<RotateCcw size={13} />}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Change File
+                </Button>
+              </div>
+
+              {/* Action row with Select Role & Scan button */}
+              <div
+                style={{
+                  paddingTop: '16px',
+                  borderTop: '1px solid var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldCheck size={16} color="var(--success)" />
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                    Evaluated privately against market engineering standards
+                  </span>
+                </div>
+
+                <Button
+                  size="md"
+                  variant="primary"
+                  onClick={() => setIsModalOpen(true)}
+                  iconRight={<ArrowRight size={15} />}
+                >
+                  Select Role &amp; Scan
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Hint Pill: Target role chosen in next step */}
+        {/* ─── Benefit Cards Row ─── */}
         <div
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '12px',
-            color: 'var(--text-muted)',
-            background: 'var(--surface)',
-            padding: '6px 12px',
-            borderRadius: '99px',
-            border: '1px solid var(--border)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '12px',
           }}
         >
-          <HelpCircle size={14} color="var(--primary)" />
-          <span>You&apos;ll choose your target role in the next step</span>
-        </div>
-      </div>
-
-      {/* ─── Desktop 2-Column Layout (8px Grid & 16px Radius) ─── */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '24px',
-          alignItems: 'start',
-          marginBottom: '36px',
-        }}
-      >
-        {/* Left Column: Hero Resume Card & Slim Replace Row */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <ResumeCard
-            profileData={profileData}
-            customResumeFile={customResumeFile}
-            setCustomResumeFile={setCustomResumeFile}
-            setResumeSource={setResumeSource}
-            onReplaceSuccess={() => {
-              // Successfully replaced CV
+          <div
+            className="daksh-glass-card"
+            style={{
+              borderRadius: '10px',
+              padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
             }}
-          />
-        </div>
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
+                  background: 'var(--accent-dim)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--accent)',
+                }}
+              >
+                <Zap size={15} />
+              </div>
+              <strong style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
+                Precision ATS Fit
+              </strong>
+            </div>
+            <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.45 }}>
+              Benchmark match score against verified industry job rubrics.
+            </p>
+          </div>
 
-        {/* Right Column: "What You'll Get" Deliverables Card */}
-        <div>
-          <WhatYouWillGetCard />
+          <div
+            className="daksh-glass-card"
+            style={{
+              borderRadius: '10px',
+              padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
+                  background: 'var(--warning-dim)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--warning)',
+                }}
+              >
+                <AlertCircle size={15} />
+              </div>
+              <strong style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
+                Skill Gap Delta
+              </strong>
+            </div>
+            <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.45 }}>
+              Uncover critical missing competencies ranked by hiring weight.
+            </p>
+          </div>
+
+          <div
+            className="daksh-glass-card"
+            style={{
+              borderRadius: '10px',
+              padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
+                  background: 'var(--success-dim)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--success)',
+                }}
+              >
+                <ShieldCheck size={15} />
+              </div>
+              <strong style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
+                Diagnostic Arena
+              </strong>
+            </div>
+            <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.45 }}>
+              Verify competencies through an adaptive quick evaluation.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* ─── Sticky Bottom Action Bar ─── */}
-      <div
-        style={{
-          position: 'sticky',
-          bottom: '20px',
-          zIndex: 100,
-          background: 'var(--surface-glass)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid var(--border-focus)',
-          borderRadius: '16px',
-          padding: '16px 24px',
-          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.35)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <strong style={{ fontSize: '15px', color: 'var(--text)', display: 'block' }}>
-            Ready to Discover Missing Skills?
-          </strong>
-          <span style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>
-            ~30 sec · Your CV stays private and is benchmarked in memory
-          </span>
-        </div>
-
-        <motion.button
-          whileHover={hasActiveResume ? { scale: 1.04, y: -2 } : {}}
-          whileTap={hasActiveResume ? { scale: 0.98 } : {}}
-          onClick={handleStartScanModal}
-          disabled={!hasActiveResume}
-          className="btn-rgb-glow"
-          type="button"
-          style={{
-            padding: '13px 32px',
-            fontSize: '14px',
-            fontWeight: 800,
-            cursor: !hasActiveResume ? 'not-allowed' : 'pointer',
-            opacity: !hasActiveResume ? 0.6 : 1,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <Sparkles size={16} />
-          <span>Start Skill Gap Scan</span>
-          <ArrowRight size={16} />
-        </motion.button>
-      </div>
-
-      {/* ─── Hero Scan Modal (Phase 1 & Phase 2) ─── */}
+      {/* ─── Floating Box: Target Role & JD Selection (Glass Modal) ─── */}
       <ScanModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        activeResumeName={activeResumeName}
-        activeResumeSize={activeResumeSize}
+        activeResumeFile={activeFile}
+        activeResumeName={activeFile?.name || 'Resume.pdf'}
+        activeResumeSize={activeFileSizeFormatted}
         selectedRole={selectedRole}
         setSelectedRole={setSelectedRole}
         customJDText={customJDText}
         setCustomJDText={setCustomJDText}
         onScanComplete={(scanResult) => {
           setIsModalOpen(false)
-          onScanCompleted(scanResult)
+          if (onScanCompleted) onScanCompleted(scanResult)
         }}
       />
     </motion.div>

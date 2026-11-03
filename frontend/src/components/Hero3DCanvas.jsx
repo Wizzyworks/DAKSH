@@ -118,7 +118,7 @@ export default function Hero3DCanvas() {
 
     // 5 Orbiting Core Modules
     const orbitalModules = [
-      { name: 'Skill Gap Matrix', radiusX: 195, radiusY: 65, tilt: 0.35, speed: 0.005, color: '#3B82F6' },
+      { name: 'Skill Gap Matrix', radiusX: 195, radiusY: 65, tilt: 0.35, speed: 0.005, color: '#6F4CFF' },
       { name: 'Dynamic Roadmap', radiusX: 225, radiusY: 75, tilt: -0.4, speed: 0.0042, color: '#10B981' },
       { name: 'SETU AI Mentor', radiusX: 170, radiusY: 55, tilt: 0.82, speed: 0.0068, color: '#8B5CF6' },
       { name: 'Interview Arena', radiusX: 245, radiusY: 80, tilt: -0.18, speed: 0.0035, color: '#F59E0B' },
@@ -168,7 +168,7 @@ export default function Hero3DCanvas() {
     // ─── Main 60 FPS Render Loop ──────────────────────────────────────────────
     const render = () => {
       ctx.clearRect(0, 0, displayWidth, displayHeight)
-      const isDark = document.documentElement.classList.contains('dark') || !document.documentElement.classList.contains('light')
+      const isDark = document.documentElement.classList.contains('dark')
 
       if (!isDragging) {
         angle += 0.0022
@@ -189,9 +189,9 @@ export default function Hero3DCanvas() {
         rayGradient.addColorStop(0.35, 'rgba(59, 130, 246, 0.03)')
         rayGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
       } else {
-        rayGradient.addColorStop(0, 'rgba(37, 99, 235, 0.06)')
-        rayGradient.addColorStop(0.35, 'rgba(37, 99, 235, 0.02)')
-        rayGradient.addColorStop(1, 'rgba(248, 250, 252, 0)')
+        rayGradient.addColorStop(0, 'rgba(79, 70, 229, 0.08)')
+        rayGradient.addColorStop(0.35, 'rgba(217, 119, 6, 0.03)')
+        rayGradient.addColorStop(1, 'rgba(245, 244, 252, 0)')
       }
 
       ctx.save()
@@ -215,9 +215,9 @@ export default function Hero3DCanvas() {
         centerGlow.addColorStop(0.4, 'rgba(59, 130, 246, 0.03)')
         centerGlow.addColorStop(1, 'rgba(0, 0, 0, 0)')
       } else {
-        centerGlow.addColorStop(0, 'rgba(37, 99, 235, 0.05)')
-        centerGlow.addColorStop(0.4, 'rgba(37, 99, 235, 0.01)')
-        centerGlow.addColorStop(1, 'rgba(248, 250, 252, 0)')
+        centerGlow.addColorStop(0, 'rgba(79, 70, 229, 0.06)')
+        centerGlow.addColorStop(0.4, 'rgba(217, 119, 6, 0.02)')
+        centerGlow.addColorStop(1, 'rgba(245, 244, 252, 0)')
       }
       ctx.fillStyle = centerGlow
       ctx.fillRect(0, 0, displayWidth, displayHeight)
@@ -266,8 +266,8 @@ export default function Hero3DCanvas() {
       const centerProj = project(0, 0, 0)
       ctx.beginPath()
       ctx.arc(centerProj.x, centerProj.y, 4, 0, Math.PI * 2)
-      ctx.fillStyle = isDark ? '#FFFFFF' : '#2563EB'
-      ctx.shadowColor = isDark ? '#60A5FA' : '#3B82F6'
+      ctx.fillStyle = isDark ? '#9A82FF' : '#6F4CFF'
+      ctx.shadowColor = isDark ? '#60A5FA' : '#6366F1'
       ctx.shadowBlur = 14
       ctx.fill()
       ctx.shadowBlur = 0
@@ -366,20 +366,20 @@ export default function Hero3DCanvas() {
         ctx.fill()
         ctx.shadowBlur = 0
 
-        ctx.font = "600 11px 'Plus Jakarta Sans', sans-serif"
+        ctx.font = "600 11px 'Inter', sans-serif"
         const textWidth = ctx.measureText(mod.name).width
         const badgeX = nodeProj.x + 8
         const badgeY = nodeProj.y - 8
 
-        ctx.fillStyle = isDark ? 'rgba(10, 10, 10, 0.92)' : 'rgba(255, 255, 255, 0.94)'
-        ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(15, 23, 42, 0.12)'
+        ctx.fillStyle = '#2B2A7A'
+        ctx.strokeStyle = isDark ? '#26255A' : '#DAD8F0'
         ctx.lineWidth = 1
         ctx.beginPath()
         ctx.roundRect(badgeX - 4, badgeY - 10, textWidth + 8, 16, 4)
         ctx.fill()
         ctx.stroke()
 
-        ctx.fillStyle = isDark ? '#EDEDED' : '#0F172A'
+        ctx.fillStyle = '#F2F1FF'
         ctx.fillText(mod.name, badgeX, badgeY + 2)
         ctx.restore()
       })

@@ -18,17 +18,27 @@ export default function DashboardPage() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // Active Main Navigation Tab (defaults to active 'skill-gap' module)
+  // Active Main Navigation Tab (defaults to 'home', or 'tab' query param)
   const [activeTab, setActiveTab] = useState(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const tabParam = searchParams.get('tab')
+    if (tabParam) return tabParam
+    if (location.state?.defaultTab) return location.state.defaultTab
     if (location.pathname === '/skill-gap') return 'skill-gap'
-    return 'skill-gap'
+    return 'home'
   })
 
   useEffect(() => {
-    if (location.pathname === '/skill-gap') {
+    const searchParams = new URLSearchParams(location.search)
+    const tabParam = searchParams.get('tab')
+    if (tabParam) {
+      setActiveTab(tabParam)
+    } else if (location.state?.defaultTab) {
+      setActiveTab(location.state.defaultTab)
+    } else if (location.pathname === '/skill-gap') {
       setActiveTab('skill-gap')
     }
-  }, [location.pathname])
+  }, [location.search, location.state, location.pathname])
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId)
@@ -54,27 +64,42 @@ export default function DashboardPage() {
           <SkillGapWorkspace
             profileData={profileData}
             onNavigateToRoadmap={() => handleSelectTab('learning-roadmap')}
+            onNavigateToHome={() => handleSelectTab('home')}
           />
         )
       case 'home':
-        return <HomeView onNavigateToActive={() => handleSelectTab('skill-gap')} />
+        return (
+          <HomeView
+            onNavigateToActive={() => handleSelectTab('skill-gap')}
+            onNavigateToLearning={() => handleSelectTab('learning-roadmap')}
+          />
+        )
       case 'learning-roadmap':
-        return <LearningRoadmapView onNavigateToActive={() => handleSelectTab('skill-gap')} />
+        return <LearningRoadmapView
+            onNavigateToActive={() => handleSelectTab('skill-gap')}
+            onNavigateToHome={() => handleSelectTab('home')}
+          />
       case 'setu-ai':
-        return <SetuAiView onNavigateToActive={() => handleSelectTab('skill-gap')} />
+        return <SetuAiView onNavigateToActive={() => handleSelectTab('skill-gap')} onNavigateToHome={() => handleSelectTab('home')} />
       case 'interview-room':
-        return <InterviewRoomView onNavigateToActive={() => handleSelectTab('skill-gap')} />
+        return <InterviewRoomView onNavigateToActive={() => handleSelectTab('skill-gap')} onNavigateToHome={() => handleSelectTab('home')} />
       case 'resume-builder':
-        return <ResumeBuilderView onNavigateToActive={() => handleSelectTab('skill-gap')} />
+        return <ResumeBuilderView onNavigateToActive={() => handleSelectTab('skill-gap')} onNavigateToHome={() => handleSelectTab('home')} />
       case 'job-search':
-        return <JobSearchView onNavigateToActive={() => handleSelectTab('skill-gap')} />
+        return <JobSearchView onNavigateToActive={() => handleSelectTab('skill-gap')} onNavigateToHome={() => handleSelectTab('home')} />
       case 'settings':
-        return <SettingsView onNavigateToActive={() => handleSelectTab('skill-gap')} />
+        return (
+          <SettingsView
+            profileData={profileData}
+            onNavigateToActive={() => handleSelectTab('skill-gap')}
+            onNavigateToHome={() => handleSelectTab('home')}
+          />
+        )
       default:
         return (
-          <SkillGapWorkspace
-            profileData={profileData}
-            onNavigateToRoadmap={() => handleSelectTab('learning-roadmap')}
+          <HomeView
+            onNavigateToActive={() => handleSelectTab('skill-gap')}
+            onNavigateToLearning={() => handleSelectTab('learning-roadmap')}
           />
         )
     }

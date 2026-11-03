@@ -10,6 +10,7 @@ import {
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Hero3DCanvas from '../components/Hero3DCanvas'
+import { useAuth } from '../context/AuthContext'
 
 
 const ROTATING_TITLES = [
@@ -173,7 +174,7 @@ const TARGET_COMPANIES = [
     svg: (
       <svg width="26" height="24" viewBox="0 0 24 24">
         <rect x="2" y="3" width="20" height="18" rx="3" fill="#7399C6" />
-        <text x="12" y="15.5" fontSize="10.5" fontWeight="900" fill="#FFFFFF" textAnchor="middle" fontFamily="Outfit, sans-serif">GS</text>
+        <text x="12" y="15.5" fontSize="10.5" fontWeight="900" fill="#F9F8FF" textAnchor="middle" fontFamily="var(--font-sans)">GS</text>
       </svg>
     ),
   },
@@ -254,14 +255,27 @@ const FAQS = [
 ]
 
 export default function LandingPage() {
+  const { user } = useAuth()
   const [rotatorIdx, setRotatorIdx] = useState(0)
   const [openFaq, setOpenFaq] = useState(null)
+
 
   useEffect(() => {
     const timer = setInterval(() => {
       setRotatorIdx((prev) => (prev + 1) % ROTATING_TITLES.length)
     }, 3200)
     return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (window.location.hash) {
+      const el = document.querySelector(window.location.hash)
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth' })
+        }, 150)
+      }
+    }
   }, [])
 
   return (
@@ -292,7 +306,7 @@ export default function LandingPage() {
                   <div className="glow-pill" style={{ padding: '4px 12px' }}>
                     <GraduationCap size={15} color="var(--primary)" />
                     <span style={{ color: 'var(--text)', fontSize: '11.5px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      ENGINEERING PLACEMENT INTELLIGENCE • DAKSH
+                      CAMPUS PLACEMENT INTELLIGENCE • BATCH 2026
                     </span>
                   </div>
                 </motion.div>
@@ -310,7 +324,7 @@ export default function LandingPage() {
                   }}
                 >
                   Turn Campus Preparation Into{' '}
-                  <span className="shimmer-text">Guaranteed Placement</span>
+                  <span style={{ color: 'var(--accent)', fontWeight: 800 }}>Guaranteed Placement</span>
                   <br />
                   <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75em', fontWeight: 600, marginTop: '4px' }}>
                     Calibrated as{' '}
@@ -324,10 +338,10 @@ export default function LandingPage() {
                         exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
                         style={{
-                          background: 'var(--gradient-primary)',
-                          WebkitBackgroundClip: 'text',
-                          backgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
+                          color: 'var(--accent)',
+
+
+
                           fontWeight: 900,
                         }}
                       >
@@ -350,7 +364,7 @@ export default function LandingPage() {
                     lineHeight: 1.65,
                   }}
                 >
-                  The autonomous placement preparation ecosystem for engineering students. Multi-signal resume parsing, adaptive diagnostic arenas, and Tier-1 hiring rubrics.
+                  DAKSH evaluates your real resume projects, targets your gap areas, and coaches your technical defense with company-grade hiring rubrics.
                 </motion.p>
 
                 {/* Direct Action Buttons: Sign Up & Log In */}
@@ -366,34 +380,57 @@ export default function LandingPage() {
                     marginBottom: '28px',
                   }}
                 >
-                  <Link
-                    to="/signup"
-                    className="btn btn-primary btn-lg"
-                    style={{
-                      borderRadius: '99px',
-                      fontSize: '14.5px',
-                      fontWeight: 800,
-                      padding: '13px 28px',
-                      boxShadow: '0 4px 20px var(--primary-glow)',
-                    }}
-                  >
-                    <span>Sign Up / Get Started</span>
-                    <ArrowRight size={16} />
-                  </Link>
+                  {user ? (
+                    <Link
+                      to="/dashboard"
+                      className="btn btn-primary btn-lg"
+                      style={{
+                        borderRadius: '99px',
+                        fontSize: '14.5px',
+                        fontWeight: 800,
+                        padding: '13px 30px',
+                        boxShadow: '0 4px 20px var(--primary-glow)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <span>Go to Dashboard</span>
+                      <ArrowRight size={16} />
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        to="/signup"
+                        className="btn btn-primary btn-lg"
+                        style={{
+                          borderRadius: '99px',
+                          fontSize: '14.5px',
+                          fontWeight: 800,
+                          padding: '13px 28px',
+                          boxShadow: '0 4px 20px var(--primary-glow)',
+                        }}
+                      >
+                        <span>Start Free</span>
+                        <ArrowRight size={16} />
+                      </Link>
 
-                  <Link
-                    to="/login"
-                    className="btn btn-outline btn-lg"
-                    style={{
-                      borderRadius: '99px',
-                      fontSize: '14.5px',
-                      fontWeight: 700,
-                      padding: '13px 26px',
-                    }}
-                  >
-                    <span>Log In</span>
-                  </Link>
+                      <Link
+                        to="/login"
+                        className="btn btn-outline btn-lg"
+                        style={{
+                          borderRadius: '99px',
+                          fontSize: '14.5px',
+                          fontWeight: 700,
+                          padding: '13px 26px',
+                        }}
+                      >
+                        <span>Log In</span>
+                      </Link>
+                    </>
+                  )}
                 </motion.div>
+
 
                 {/* System Capability Telemetry Bar */}
                 <motion.div
@@ -412,15 +449,15 @@ export default function LandingPage() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Zap size={14} color="var(--primary)" />
-                    <span>Multi-Signal AI Engine</span>
+                    <span>Resume Project Analysis</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Terminal size={14} color="#10B981" />
-                    <span>GitHub Repo-Aware</span>
+                    <span>GitHub Architecture Aware</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Target size={14} color="#F59E0B" />
-                    <span>Adaptive Diagnostic Arena</span>
+                    <span>Tier-1 Hiring Rubrics</span>
                   </div>
                 </motion.div>
               </div>
@@ -493,9 +530,9 @@ export default function LandingPage() {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 48px' }}
             >
-              <span className="glow-pill" style={{ marginBottom: '12px' }}>
-                CORE INTELLIGENCE
-              </span>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
+                Core Intelligence
+              </div>
               <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', marginBottom: '14px' }}>
                 Engineered for High-Stakes Campus Interviews
               </h2>
@@ -506,14 +543,11 @@ export default function LandingPage() {
 
             {/* Asymmetric Bento Grid with Scroll Reveal */}
             <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '22px',
-              }}
+              className="daksh-bento-grid"
             >
               {BENTO_FEATURES.map((feat, idx) => {
                 const Icon = feat.icon
+                const isSpanTwo = idx === 0 || idx === 3
                 return (
                   <motion.div
                     key={idx}
@@ -522,7 +556,7 @@ export default function LandingPage() {
                     viewport={{ once: true, margin: '-40px' }}
                     transition={{ duration: 0.55, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
                     whileHover={{ y: -4 }}
-                    className="gradient-border-card"
+                    className={`gradient-border-card ${isSpanTwo ? 'bento-span-2' : ''}`}
                     style={{
                       padding: '30px',
                       display: 'flex',
@@ -565,7 +599,52 @@ export default function LandingPage() {
                       </div>
 
                       <h3 style={{ fontSize: '19px', marginBottom: '10px' }}>{feat.title}</h3>
-                      <p style={{ fontSize: '13.5px', lineHeight: 1.65, marginBottom: '20px' }}>{feat.desc}</p>
+                      <p style={{ fontSize: '13.5px', lineHeight: 1.65, marginBottom: idx === 0 || idx === 3 ? '12px' : '20px' }}>{feat.desc}</p>
+
+                      {idx === 0 && (
+                        <div
+                          style={{
+                            margin: '12px 0 18px',
+                            padding: '10px 14px',
+                            borderRadius: '8px',
+                            background: 'var(--surface-soft)',
+                            border: '1px solid var(--border)',
+                            fontSize: '11.5px',
+                            fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)",
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981', fontWeight: 600 }}>
+                            <span>●</span>
+                            <span>Live AST Extraction Active</span>
+                          </div>
+                          <div style={{ color: 'var(--text-muted)' }}>
+                            Stack: <span style={{ color: 'var(--accent)' }}>React 19 • Node.js • PostgreSQL • Redis</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {idx === 3 && (
+                        <div
+                          style={{
+                            margin: '12px 0 18px',
+                            padding: '10px 14px',
+                            borderRadius: '8px',
+                            background: 'var(--surface-soft)',
+                            border: '1px solid var(--border)',
+                            fontSize: '11.5px',
+                            fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)",
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <span style={{ color: 'var(--text-muted)' }}>Adaptive Target Focus:</span>
+                          <span style={{ color: '#0284C7', fontWeight: 600 }}>System Design & Caching</span>
+                        </div>
+                      )}
                     </div>
 
                     <div
@@ -593,7 +672,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── Methodology / Pipeline (Scroll Reveal) ──────────────── */}
-        <section id="methodology" className="section" style={{ background: 'var(--surface-soft)' }}>
+        <section id="methodology" className="section section-indigo-band">
           <div className="page-container">
             <motion.div
               initial={{ opacity: 0, y: 35 }}
@@ -602,9 +681,9 @@ export default function LandingPage() {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 48px' }}
             >
-              <span className="glow-pill" style={{ marginBottom: '12px' }}>
-                METHODOLOGY
-              </span>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
+                Preparation Pipeline
+              </div>
               <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', marginBottom: '14px' }}>
                 From Resume Parsing to Campus Offer Letter
               </h2>
@@ -622,22 +701,22 @@ export default function LandingPage() {
             >
               {[
                 {
-                  step: '01',
+                  step: '01 / intake',
                   title: 'Smart Profile Onboarding',
                   desc: 'Input your college, batch, target companies, and upload your resume for deep semantic parsing.'
                 },
                 {
-                  step: '02',
+                  step: '02 / stack',
                   title: 'Custom Question Generation',
                   desc: 'DAKSH extracts your specific project stack to generate authentic questions — zero generic trivia.'
                 },
                 {
-                  step: '03',
+                  step: '03 / simulation',
                   title: 'Live Voice & Text Simulation',
                   desc: 'Engage in an adaptive interview. AI probes deeper if your answers lack depth or STAR structure.'
                 },
                 {
-                  step: '04',
+                  step: '04 / metrics',
                   title: 'Actionable Score & Fix Plan',
                   desc: 'Receive immediate metrics across technical correctness, communication, and step-by-step revision drills.'
                 }
@@ -648,6 +727,7 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.55, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                  className="band-card"
                   style={{
                     background: 'var(--surface)',
                     border: '1px solid var(--border)',
@@ -658,15 +738,13 @@ export default function LandingPage() {
                 >
                   <span
                     style={{
-                      fontFamily: 'Outfit, sans-serif',
-                      fontSize: '30px',
-                      fontWeight: 900,
-                      background: 'var(--gradient-primary)',
-                      WebkitBackgroundClip: 'text',
-                      backgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: 'var(--accent)',
                       display: 'block',
-                      marginBottom: '10px',
+                      marginBottom: '12px',
+                      fontFamily: 'var(--font-mono)',
                     }}
                   >
                     {item.step}
@@ -689,9 +767,9 @@ export default function LandingPage() {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 48px' }}
             >
-              <span className="glow-pill" style={{ marginBottom: '12px' }}>
-                BENCHMARK COMPARISON
-              </span>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
+                The DAKSH Advantage
+              </div>
               <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', marginBottom: '14px' }}>
                 Why Traditional Prep Falls Short
               </h2>
@@ -749,13 +827,12 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.55, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="gradient-border-card"
                 style={{
                   background: 'var(--surface)',
-                  border: '2px solid var(--primary)',
+                  border: '1.5px solid var(--accent)',
                   borderRadius: 'var(--radius-xl)',
                   padding: '30px',
-                  boxShadow: '0 16px 36px var(--primary-glow)',
+                  boxShadow: '0 8px 30px var(--primary-glow)',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -791,7 +868,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FAQ Section (Scroll Reveal) ─────────────────────────── */}
-        <section className="section" style={{ background: 'var(--surface-soft)' }}>
+        <section id="faqs" className="section" style={{ background: 'var(--surface-soft)' }}>
           <div className="page-container">
             <motion.div
               initial={{ opacity: 0, y: 35 }}
@@ -800,9 +877,9 @@ export default function LandingPage() {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               style={{ textAlign: 'center', maxWidth: '650px', margin: '0 auto 45px' }}
             >
-              <span className="glow-pill" style={{ marginBottom: '12px' }}>
-                FREQUENTLY ASKED QUESTIONS
-              </span>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
+                Common Questions
+              </div>
               <h2 style={{ fontSize: 'clamp(26px, 4vw, 38px)' }}>Frequently Asked Questions</h2>
             </motion.div>
 
@@ -923,15 +1000,28 @@ export default function LandingPage() {
                   Join thousands of engineering candidates upgrading their mock preparation with instant, intelligent AI feedback.
                 </p>
 
-                <Link
-                  to="/signup"
-                  className="btn btn-primary btn-lg"
-                  style={{ borderRadius: '99px', fontSize: '15px', padding: '15px 36px' }}
-                >
-                  <ShieldCheck size={18} />
-                  <span>Get Started For Free</span>
-                  <ArrowRight size={17} />
-                </Link>
+                {user ? (
+                  <Link
+                    to="/dashboard"
+                    className="btn btn-primary btn-lg"
+                    style={{ borderRadius: '99px', fontSize: '15px', padding: '15px 36px' }}
+                  >
+                    <ShieldCheck size={18} />
+                    <span>Go to Dashboard</span>
+                    <ArrowRight size={17} />
+                  </Link>
+                ) : (
+                  <Link
+                    to="/signup"
+                    className="btn btn-primary btn-lg"
+                    style={{ borderRadius: '99px', fontSize: '15px', padding: '15px 36px' }}
+                  >
+                    <ShieldCheck size={18} />
+                    <span>Get Started For Free</span>
+                    <ArrowRight size={17} />
+                  </Link>
+                )}
+
               </div>
             </motion.div>
           </div>

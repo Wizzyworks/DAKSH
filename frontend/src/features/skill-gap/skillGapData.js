@@ -1,9 +1,9 @@
-// Dynamic Adaptive Question Pool for Fresher Placement Calibration (No Difficulty Labels)
+// Skill Gap Data — Role Taxonomy & Adaptive Question Pool
 
 export const PRESET_ROLES = [
   {
     id: 'fullstack',
-    title: 'Full Stack Web Developer',
+    title: 'Full Stack Developer',
     coreSkills: ['React.js', 'Node.js', 'Express', 'PostgreSQL', 'Redis', 'Docker', 'REST APIs', 'Git'],
     description: 'Build modern web applications with responsive frontend and robust backend APIs.',
   },
@@ -27,177 +27,299 @@ export const PRESET_ROLES = [
   },
 ]
 
-// Adaptive Assessment Question Pool (Multi-Format: DSA, Code Debugging, Output Prediction, Protocol, Database)
+// // TODO: wire to API - comprehensive role catalog grouped by domain
+export const EXPANDED_ROLE_CATEGORIES = [
+  {
+    category: 'Software & Web Engineering',
+    roles: [
+      { slug: 'sde-fullstack', title: 'Full Stack Developer' },
+      { slug: 'sde-frontend', title: 'Frontend Developer' },
+      { slug: 'sde-backend', title: 'Backend Developer' },
+      { slug: 'sde-mobile', title: 'Mobile App Developer' },
+      { slug: 'sde-devops', title: 'DevOps Engineer' },
+      { slug: 'sde-cloud', title: 'Cloud Infrastructure Engineer' },
+      { slug: 'sde-sre', title: 'Site Reliability Engineer (SRE)' },
+      { slug: 'sde-qa', title: 'QA & Automation Engineer' },
+      { slug: 'sde-security', title: 'Cybersecurity Analyst' },
+      { slug: 'sde-system', title: 'Systems Software Engineer' },
+    ],
+  },
+  {
+    category: 'Data & Artificial Intelligence',
+    roles: [
+      { slug: 'sde-aiml', title: 'AI & Machine Learning Engineer' },
+      { slug: 'data-scientist', title: 'Data Scientist' },
+      { slug: 'data-analyst', title: 'Data Analyst' },
+      { slug: 'data-engineer', title: 'Data Engineer' },
+      { slug: 'genai-engineer', title: 'GenAI Solutions Engineer' },
+      { slug: 'mlops-engineer', title: 'MLOps Engineer' },
+      { slug: 'cv-engineer', title: 'Computer Vision Engineer' },
+      { slug: 'bi-analyst', title: 'Business Intelligence Analyst' },
+    ],
+  },
+  {
+    category: 'Core, Embedded & Hardware',
+    roles: [
+      { slug: 'embedded-systems', title: 'Embedded Systems Engineer' },
+      { slug: 'iot-engineer', title: 'IoT Solutions Engineer' },
+      { slug: 'robotics-engineer', title: 'Robotics Software Engineer' },
+      { slug: 'vlsi-engineer', title: 'VLSI & Chip Design Engineer' },
+      { slug: 'firmware-engineer', title: 'Firmware Engineer' },
+      { slug: 'network-engineer', title: 'Network & Systems Engineer' },
+    ],
+  },
+  {
+    category: 'Product, Design & Architecture',
+    roles: [
+      { slug: 'ui-ux-designer', title: 'UI / UX Product Designer' },
+      { slug: 'tech-pm', title: 'Technical Product Manager' },
+      { slug: 'business-analyst', title: 'Business Systems Analyst' },
+      { slug: 'solutions-architect', title: 'Solutions Architect' },
+      { slug: 'tech-writer', title: 'Technical Documentation Engineer' },
+    ],
+  },
+]
+
+// Adaptive Assessment Question Pool (15 plain-text questions with difficultyLevel for adaptive sorting)
 export const ADAPTIVE_QUESTION_POOL = [
   {
     id: 'q-dsa-hashmap',
-    category: 'Data Structures & Algorithmic Complexity',
-    skillTarget: 'DSA & Core CS',
-    title: 'Two-Sum Array Complement Optimization',
-    codeSnippet: `// Approach A: Brute Force Nested Iteration
-for (let i = 0; i < nums.length; i++) {
-  for (let j = i + 1; j < nums.length; j++) {
-    if (nums[i] + nums[j] === target) return [i, j];
-  }
-}
-
-// Approach B: Hash Map Single-Pass Lookup
-const map = new Map();
-for (let i = 0; i < nums.length; i++) {
-  const complement = target - nums[i];
-  if (map.has(complement)) return [map.get(complement), i];
-  map.set(nums[i], i);
-}`,
-    question:
-      'Why does the Hash Map single-pass lookup reduce time complexity from quadratic O(N²) to linear O(N)?',
+    skillTarget: 'DSA & Algorithms',
+    title: 'Hash Map vs Nested Loop',
+    difficultyLevel: 'intermediate',
+    difficulty_b: 0.0,
+    question: 'A function to find if two numbers in an array sum to a target runs in O(N²) using nested loops. How does a Hash Map reduce this to O(N)?',
     options: [
-      {
-        id: 'a',
-        text: 'Hash Map provides average O(1) constant-time key lookups for the complement, eliminating the inner loop.',
-      },
-      {
-        id: 'b',
-        text: 'Hash Map automatically sorts the array in O(log N) time prior to element traversal.',
-      },
-      {
-        id: 'c',
-        text: 'Hash Map executes array lookups asynchronously across multiple CPU worker threads.',
-      },
-      {
-        id: 'd',
-        text: 'Hash Map deletes visited duplicate elements to reduce the total number of iterations.',
-      },
+      { id: 'a', text: 'It stores visited numbers and checks the complement in O(1) average lookup time, removing the inner loop.' },
+      { id: 'b', text: 'It sorts the array first in O(N log N), then uses binary search for each element.' },
+      { id: 'c', text: 'It uses multiple threads to run both loops simultaneously in parallel.' },
+      { id: 'd', text: 'It removes duplicate elements to shrink the array before traversal.' },
     ],
     correct: 'a',
-    explanation:
-      'Hash Map stores previously visited numbers with their indices, allowing complement lookups in average O(1) time without nested iterations.',
+    explanation: 'A Hash Map stores each element and its index as you iterate. For each new element, you check if its complement (target - element) already exists — an O(1) operation — eliminating the need for a nested loop.',
   },
   {
-    id: 'q-react-debug',
-    category: 'Component State Lifecycle & Side Effects',
+    id: 'q-react-useeffect',
     skillTarget: 'React.js',
-    title: 'React useEffect Stale Prop Bug',
-    codeSnippet: `function UserProfileCard({ userId }) {
-  const [userData, setUserData] = useState(null);
-
-  useEffect(() => {
-    fetchUserProfile(userId).then((res) => {
-      setUserData(res.data);
-    });
-  }, []); // <-- Notice the dependency array
-
-  return <div>{userData ? userData.name : 'Loading...'}</div>;
-}`,
-    question:
-      'When the parent component updates userId from 101 to 102, what unexpected behavior occurs in the component above?',
+    title: 'useEffect Stale Dependency',
+    difficultyLevel: 'intermediate',
+    difficulty_b: 0.2,
+    question: 'A React component fetches user data using useEffect with an empty dependency array []. The parent passes a new userId prop, but the component still shows old data. What is the root cause?',
     options: [
-      {
-        id: 'a',
-        text: 'The component enters an infinite re-render loop crashing the browser window.',
-      },
-      {
-        id: 'b',
-        text: 'The component fails to fetch the updated profile for userId 102 because userId is omitted from the dependency array.',
-      },
-      {
-        id: 'c',
-        text: 'React throws a fatal TypeError because fetchUserProfile cannot run inside useEffect.',
-      },
-      {
-        id: 'd',
-        text: 'The userData state resets to null on every single render cycle.',
-      },
+      { id: 'a', text: 'The component causes an infinite re-render loop.' },
+      { id: 'b', text: 'userId is missing from the dependency array, so the effect never re-runs when the prop changes.' },
+      { id: 'c', text: 'React prohibits fetch calls inside useEffect.' },
+      { id: 'd', text: 'The state resets to null on every render.' },
     ],
     correct: 'b',
-    explanation:
-      'With an empty dependency array [], the effect executes only once on initial mount. Adding [userId] ensures the effect re-runs whenever the prop updates.',
+    explanation: 'An empty dependency array [] means the effect runs once on mount and never again. Adding userId to the array [userId] ensures the effect re-fires whenever that prop changes.',
   },
   {
     id: 'q-js-eventloop',
-    category: 'JavaScript Runtime & Concurrency Model',
     skillTarget: 'JavaScript (ES6+)',
-    title: 'Asynchronous Event Loop Execution Order',
-    codeSnippet: `console.log('Step 1');
-
-setTimeout(() => {
-  console.log('Step 2');
-}, 0);
-
-Promise.resolve().then(() => {
-  console.log('Step 3');
-});
-
-console.log('Step 4');`,
-    question: 'What is the exact execution output logged to the console?',
+    title: 'Event Loop & Execution Order',
+    difficultyLevel: 'intermediate',
+    difficulty_b: 0.3,
+    question: 'Code runs: console.log("A"), then setTimeout("B", 0), then Promise.resolve().then("C"), then console.log("D"). What is the output order?',
     options: [
-      { id: 'a', text: 'Step 1 -> Step 4 -> Step 3 -> Step 2' },
-      { id: 'b', text: 'Step 1 -> Step 2 -> Step 3 -> Step 4' },
-      { id: 'c', text: 'Step 1 -> Step 3 -> Step 4 -> Step 2' },
-      { id: 'd', text: 'Step 1 -> Step 4 -> Step 2 -> Step 3' },
+      { id: 'a', text: 'A → D → C → B' },
+      { id: 'b', text: 'A → B → C → D' },
+      { id: 'c', text: 'A → C → D → B' },
+      { id: 'd', text: 'A → D → B → C' },
     ],
     correct: 'a',
-    explanation:
-      'Synchronous logs (Step 1, Step 4) run on the main call stack first. Then microtasks (Promise.then) execute (Step 3) before macrotasks (setTimeout) in the task queue (Step 2).',
+    explanation: 'Synchronous code (A, D) runs first. Then microtasks (Promise.then → C) execute before macrotasks (setTimeout → B). Order: A → D → C → B.',
   },
   {
     id: 'q-api-status',
-    category: 'REST API Protocols & Error Handling',
-    skillTarget: 'REST APIs & Backend',
-    title: 'Authentication Protocol Conventions',
-    codeSnippet: `// Backend Protected Middleware
-function requireAuth(req, res, next) {
-  const token = req.headers['authorization'];
-  if (!token || isTokenExpired(token)) {
-    // Missing or invalid authorization token
-    return res.status(???).json({ error: 'Authentication required' });
-  }
-  next();
-}`,
-    question:
-      'What standard HTTP status code should the middleware return when the authorization token is missing or expired?',
+    skillTarget: 'REST APIs',
+    title: 'HTTP Status Codes — Auth',
+    difficultyLevel: 'beginner',
+    difficulty_b: -0.5,
+    question: 'A backend middleware checks for a JWT token in the Authorization header. The token is missing. Which HTTP status code should it return?',
     options: [
-      { id: 'a', text: '401 Unauthorized (Client must authenticate before accessing resource)' },
-      { id: 'b', text: '403 Forbidden (Authenticated, but lacking required admin permissions)' },
-      { id: 'c', text: '404 Not Found (Requested route or resource does not exist)' },
-      { id: 'd', text: '500 Internal Server Error (Unexpected crash in server logic)' },
+      { id: 'a', text: '401 Unauthorized — authentication credentials are missing or invalid' },
+      { id: 'b', text: '403 Forbidden — the user is authenticated but lacks permission' },
+      { id: 'c', text: '404 Not Found — the route does not exist' },
+      { id: 'd', text: '500 Internal Server Error — unexpected crash in server logic' },
     ],
     correct: 'a',
-    explanation:
-      'HTTP 401 Unauthorized is the standard response for missing or invalid authentication credentials, whereas 403 Forbidden indicates the identity is known but not permitted.',
+    explanation: '401 means the client has not provided valid authentication. 403 means the client IS authenticated but not authorized for that specific resource.',
   },
   {
     id: 'q-sql-indexing',
-    category: 'Database Query Optimization & Indexing',
     skillTarget: 'PostgreSQL & SQL',
-    title: 'B-Tree Indexing on Filter Queries',
-    codeSnippet: `-- Schema has B-Tree index on column: "email"
--- Query A:
-SELECT * FROM users WHERE email = 'alex@example.com';
-
--- Query B:
-SELECT * FROM users WHERE LOWER(email) = 'alex@example.com';`,
-    question:
-      'Why does Query B trigger a slow sequential table scan instead of using the standard index on email?',
+    title: 'Why Function Calls Break Indexes',
+    difficultyLevel: 'intermediate',
+    difficulty_b: 0.4,
+    question: "A table has a B-Tree index on the 'email' column. Query A uses WHERE email = 'x' but Query B uses WHERE LOWER(email) = 'x'. Which one uses the index?",
     options: [
-      {
-        id: 'a',
-        text: 'Applying the function LOWER(email) prevents the query planner from using the standard B-Tree index without a functional index.',
-      },
-      {
-        id: 'b',
-        text: 'PostgreSQL disables all indexes automatically when WHERE clauses contain string comparisons.',
-      },
-      {
-        id: 'c',
-        text: 'Query B locks the entire table into read-only mode during uppercase conversions.',
-      },
-      {
-        id: 'd',
-        text: 'B-Tree indexes only support integer primary key columns, not text columns.',
-      },
+      { id: 'a', text: 'Both queries use the index identically.' },
+      { id: 'b', text: 'Query A uses the index; Query B triggers a full sequential scan because LOWER() prevents index use without a functional index.' },
+      { id: 'c', text: 'Query B uses the index because LOWER() is a built-in PostgreSQL optimizer hint.' },
+      { id: 'd', text: 'Neither query uses the index — B-Tree indexes do not apply to text columns.' },
+    ],
+    correct: 'b',
+    explanation: 'Standard B-Tree indexes store raw column values. Wrapping a column in a function (LOWER) forces a sequential scan unless you create a functional expression index on LOWER(email).',
+  },
+  {
+    id: 'q-redis-eviction',
+    skillTarget: 'Redis',
+    title: 'Cache Eviction Policies',
+    difficultyLevel: 'intermediate',
+    difficulty_b: 0.3,
+    question: 'Your Redis instance is used as a session cache. Memory is full and you need least recently used keys to be evicted automatically. Which policy should you configure?',
+    options: [
+      { id: 'a', text: 'noeviction — reject write operations when memory is full' },
+      { id: 'b', text: 'allkeys-lru — evict the least recently used key from all keys' },
+      { id: 'c', text: 'volatile-ttl — only evict keys with a TTL set, by shortest remaining TTL' },
+      { id: 'd', text: 'allkeys-random — evict a random key from all stored keys' },
+    ],
+    correct: 'b',
+    explanation: 'allkeys-lru evicts the least recently used key from the entire keyspace, keeping hot session data in memory while removing stale sessions automatically.',
+  },
+  {
+    id: 'q-docker-layers',
+    skillTarget: 'Docker',
+    title: 'Docker Layer Caching Strategy',
+    difficultyLevel: 'intermediate',
+    difficulty_b: 0.2,
+    question: 'In a Node.js Dockerfile, copying package.json and running npm install BEFORE copying the application code significantly speeds up rebuilds. Why?',
+    options: [
+      { id: 'a', text: 'npm install runs in parallel with the rest of the build pipeline.' },
+      { id: 'b', text: 'Docker caches each layer; if package.json has not changed, the npm install layer is reused from cache, skipping re-installation.' },
+      { id: 'c', text: 'Docker skips npm install entirely if node_modules already exists on the host machine.' },
+      { id: 'd', text: 'Copying package.json first compresses the final image size by 50%.' },
+    ],
+    correct: 'b',
+    explanation: 'Docker caches build layers. If you COPY package.json first then RUN npm install, that layer is cached until package.json changes. Subsequent builds reuse the cached layer, making rebuilds much faster.',
+  },
+  {
+    id: 'q-system-design-cdn',
+    skillTarget: 'System Design',
+    title: 'CDN & Static Asset Delivery',
+    difficultyLevel: 'beginner',
+    difficulty_b: -0.3,
+    question: 'A company notices their API server is slow because it serves static images and CSS files. Which architectural component would best address this?',
+    options: [
+      { id: 'a', text: 'Add more database read replicas' },
+      { id: 'b', text: 'Deploy a Content Delivery Network (CDN) to serve static assets from edge nodes closer to users' },
+      { id: 'c', text: 'Switch from REST to GraphQL for image delivery' },
+      { id: 'd', text: 'Increase the server RAM and CPU allocation' },
+    ],
+    correct: 'b',
+    explanation: 'A CDN caches static files on geographically distributed edge nodes. Users download from the nearest node, dramatically reducing latency and offloading traffic from the origin server.',
+  },
+  {
+    id: 'q-async-promise-all',
+    skillTarget: 'JavaScript (ES6+)',
+    title: 'Promise.all vs Promise.allSettled',
+    difficultyLevel: 'advanced',
+    difficulty_b: 0.7,
+    question: 'You need to call 3 APIs simultaneously. If any one fails, you still want the results of the others. Should you use Promise.all or Promise.allSettled?',
+    options: [
+      { id: 'a', text: 'Promise.all — it waits for all to succeed and returns all results.' },
+      { id: 'b', text: 'Promise.allSettled — it waits for all to complete regardless of success or failure, returning each result with a status field.' },
+      { id: 'c', text: 'Promise.race — it returns the first promise to resolve or reject.' },
+      { id: 'd', text: 'Promise.any — it returns the first successful result but ignores failures.' },
+    ],
+    correct: 'b',
+    explanation: 'Promise.all short-circuits on the first rejection. Promise.allSettled waits for all promises to complete and returns each result with a status field, letting you handle partial failures gracefully.',
+  },
+  {
+    id: 'q-db-acid',
+    skillTarget: 'PostgreSQL & SQL',
+    title: 'Database ACID Properties',
+    difficultyLevel: 'advanced',
+    difficulty_b: 0.8,
+    question: 'A bank transfer deducts amount from account A and credits account B. A server crash occurs between the two operations. Which ACID property ensures both operations complete together or neither does?',
+    options: [
+      { id: 'a', text: 'Consistency — data must remain in a valid state at all times' },
+      { id: 'b', text: 'Atomicity — all operations in a transaction complete or none do' },
+      { id: 'c', text: 'Isolation — concurrent transactions do not interfere with each other' },
+      { id: 'd', text: 'Durability — committed data is permanently saved even after crashes' },
+    ],
+    correct: 'b',
+    explanation: 'Atomicity guarantees that a transaction is treated as a single unit — either all operations commit or the whole transaction is rolled back, preventing partial updates like deducting money without crediting it.',
+  },
+  {
+    id: 'q-node-event-emitter',
+    skillTarget: 'Node.js',
+    title: 'Event-Driven Architecture in Node.js',
+    difficultyLevel: 'intermediate',
+    difficulty_b: 0.4,
+    question: 'In Node.js, if you register multiple listeners for the same event on an EventEmitter, what happens when that event is emitted?',
+    options: [
+      { id: 'a', text: 'Only the first registered listener is called.' },
+      { id: 'b', text: 'All registered listeners are called in the order they were registered.' },
+      { id: 'c', text: 'Listeners are called in reverse order (last registered, first called).' },
+      { id: 'd', text: 'The event emitter throws an error if more than one listener exists.' },
+    ],
+    correct: 'b',
+    explanation: 'Node.js EventEmitter calls all listeners registered for an event in registration order. Node.js warns by default if more than 10 listeners are registered for the same event as a memory leak protection.',
+  },
+  {
+    id: 'q-css-specificity',
+    skillTarget: 'Frontend & CSS',
+    title: 'CSS Specificity Hierarchy',
+    difficultyLevel: 'beginner',
+    difficulty_b: -0.4,
+    question: 'Three CSS rules target the same element: a class selector (.card), an ID selector (#hero), and an inline style. Which takes precedence?',
+    options: [
+      { id: 'a', text: 'The class selector (.card) — classes are the standard styling unit.' },
+      { id: 'b', text: 'The inline style — it has the highest specificity (except for !important).' },
+      { id: 'c', text: 'Whichever rule appears last in the CSS file.' },
+      { id: 'd', text: 'The ID selector (#hero) — IDs always override classes and inline styles.' },
+    ],
+    correct: 'b',
+    explanation: 'CSS specificity: !important > inline styles > ID selectors > class selectors > element selectors. Inline styles win by specificity unless !important overrides them.',
+  },
+  {
+    id: 'q-rest-idempotent',
+    skillTarget: 'REST APIs',
+    title: 'Idempotent HTTP Methods',
+    difficultyLevel: 'advanced',
+    difficulty_b: 0.6,
+    question: 'Which HTTP methods are idempotent — meaning calling them multiple times produces the same server state as calling them once?',
+    options: [
+      { id: 'a', text: 'GET, PUT, DELETE — they produce the same result on repeated calls.' },
+      { id: 'b', text: 'POST and PATCH — they are designed for safe repeated modifications.' },
+      { id: 'c', text: 'Only GET is idempotent because it never modifies data.' },
+      { id: 'd', text: 'All HTTP methods are idempotent by specification.' },
     ],
     correct: 'a',
-    explanation:
-      'Standard B-Tree indexes store raw values. When a function like LOWER() wraps a column in the WHERE clause, the database must evaluate every row sequentially unless an expression index (LOWER(email)) exists.',
+    explanation: 'GET, PUT, and DELETE are idempotent. POST is NOT — calling it twice creates two resources. PATCH may or may not be idempotent depending on implementation.',
+  },
+  {
+    id: 'q-docker-network',
+    skillTarget: 'Docker',
+    title: 'Container Networking in Docker Compose',
+    difficultyLevel: 'advanced',
+    difficulty_b: 0.9,
+    question: 'Two Docker containers (a Node API and a PostgreSQL DB) are defined in docker-compose.yml. How does the Node API container connect to the database?',
+    options: [
+      { id: 'a', text: 'Using localhost:5432 — containers share the same network namespace.' },
+      { id: 'b', text: 'Using the service name as hostname (e.g., "postgres:5432") — Docker Compose creates a shared bridge network with DNS.' },
+      { id: 'c', text: "Using the host machine's IP address and port forwarding." },
+      { id: 'd', text: 'Containers cannot communicate directly — you need an external load balancer.' },
+    ],
+    correct: 'b',
+    explanation: 'Docker Compose creates a bridge network and registers each service name as a DNS hostname. The Node API can reach the DB at "postgres:5432". Using localhost:5432 would reference the container own loopback, not the DB container.',
+  },
+  {
+    id: 'q-algo-big-o',
+    skillTarget: 'DSA & Algorithms',
+    title: 'Time Complexity Analysis',
+    difficultyLevel: 'beginner',
+    difficulty_b: -0.6,
+    question: 'What is the time complexity of searching for an element in an unsorted array of N elements?',
+    options: [
+      { id: 'a', text: 'O(1) — constant time, using direct memory addressing.' },
+      { id: 'b', text: 'O(log N) — logarithmic, using binary search.' },
+      { id: 'c', text: 'O(N) — linear time, you must check each element in the worst case.' },
+      { id: 'd', text: 'O(N log N) — same as sorting algorithms.' },
+    ],
+    correct: 'c',
+    explanation: 'In an unsorted array, you may need to check every element. This makes it O(N) linear time. Binary search (O(log N)) only works on sorted arrays.',
   },
 ]

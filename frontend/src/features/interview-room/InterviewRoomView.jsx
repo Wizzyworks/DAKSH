@@ -1,7 +1,7 @@
 import { Mic } from 'lucide-react'
 import ComingSoonView from '../../components/ComingSoonView'
 
-export default function InterviewRoomView({ onNavigateToActive }) {
+export default function InterviewRoomView({ onNavigateToActive, onNavigateToHome }) {
   return (
     <ComingSoonView
       title="AI Interview Room & Assessment Arena"
@@ -16,6 +16,7 @@ export default function InterviewRoomView({ onNavigateToActive }) {
         'LLM-as-a-Judge real-time rubric scorecard with Radar Chart breakdown',
       ]}
       onNavigateToActive={onNavigateToActive}
+      onNavigateToHome={onNavigateToHome}
     />
   )
 }

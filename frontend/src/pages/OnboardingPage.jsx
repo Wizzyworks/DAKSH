@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Check, AlertCircle, GraduationCap, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -35,6 +35,8 @@ function validateStep(step, values) {
 export default function OnboardingPage() {
   const { user, completeOnboarding } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const isEditMode = new URLSearchParams(location.search).get('mode') === 'edit'
 
   const [currentStep, setCurrentStep] = useState(0)
   const [direction, setDirection] = useState(1)
@@ -105,6 +107,23 @@ export default function OnboardingPage() {
       setCurrentStep((s) => s + 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
+  }
+
+  const handleSaveAndExit = () => {
+    try {
+      const safe = {}
+      for (const [k, v] of Object.entries(values)) {
+        if (v && typeof v === 'object' && v.file) {
+          safe[k] = { name: v.name, size: v.size, type: v.type }
+        } else {
+          safe[k] = v
+        }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(safe))
+    } catch (e) {
+      console.warn('Could not save profile during exit:', e)
+    }
+    navigate('/dashboard?tab=settings', { replace: true, state: { defaultTab: 'settings' } })
   }
 
   const handleSubmit = async () => {
@@ -187,10 +206,10 @@ export default function OnboardingPage() {
                     boxShadow: '0 2px 10px var(--primary-glow)',
                   }}
                 >
-                  <GraduationCap size={18} color="#FFFFFF" strokeWidth={2.2} />
+                  <GraduationCap size={18} color="var(--on-acc)" strokeWidth={2.2} />
                 </div>
                 <div>
-                  <span style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.02em', fontFamily: 'Outfit, sans-serif' }}>
+                  <span style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.02em', fontFamily: 'var(--font-serif)' }}>
                     DAKSH
                   </span>
                   <span style={{ fontSize: '10px', color: 'var(--text-subtle)', fontWeight: 600, display: 'block', marginTop: '-3px' }}>
@@ -230,7 +249,7 @@ export default function OnboardingPage() {
           </div>
 
           {/* Step Progress Bubble Bar */}
-          <ProgressIndicator steps={steps} currentStep={currentStep} />
+          <ProgressIndicator steps={steps} currentStep={currentStep} onStepClick={isEditMode ? (i) => setCurrentStep(i) : undefined} />
 
           {/* Form Step Card */}
           <div
@@ -323,6 +342,26 @@ export default function OnboardingPage() {
 
               {/* RIGHT SIDE: Save & Continue / Save & Launch Dashboard */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {isEditMode && (
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    onClick={handleSaveAndExit}
+                    style={{
+                      gap: '8px',
+                      borderRadius: '99px',
+                      padding: '11px 22px',
+                      background: 'var(--surface-soft)',
+                      border: '1.5px solid var(--accent)',
+                      color: 'var(--accent)',
+                      fontWeight: 650,
+                      fontSize: '13.5px',
+                    }}
+                  >
+                    <Check size={16} strokeWidth={2.5} />
+                    <span>Save &amp; Exit to Settings</span>
+                  </Button>
+                )}
                 {isLast ? (
                   <Button
                     variant="primary"
