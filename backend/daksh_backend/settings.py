@@ -19,20 +19,25 @@ DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "corsheaders",
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "accounts",
-    "skill_gap",
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    # Third-party apps
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
+
+    # Daksh Apps
+    'accounts',
+    'skill_gap',
 ]
 
-AUTH_USER_MODEL = "accounts.User"
+AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware", 
@@ -66,22 +71,40 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "daksh_backend.wsgi.application"
 
-# Check if .env file exists
-ENV_FILE_EXISTS = (BASE_DIR / ".env").exists()
+# CORS Configuration
+cors_origins_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+if cors_origins_env:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
-# Database Configuration
-DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.postgresql")
-DB_NAME = os.getenv("DB_NAME", "daksh")
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-test-user-id',
+]
 
-# Default to SQLite if no .env file exists, or if USE_SQLITE=True is set
-USE_SQLITE = os.getenv("USE_SQLITE", "False" 
-if ENV_FILE_EXISTS else "True").lower() in ("true", "1", "yes")
+# Database Configuration (Defaults to SQLite for local development, switches to PostgreSQL if enabled)
+use_sqlite_str = os.getenv('USE_SQLITE', '')
+if use_sqlite_str != '':
+    USE_POSTGRES = not (use_sqlite_str.lower() in ('true', '1', 'yes'))
+else:
+    USE_POSTGRES = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
 
-if USE_SQLITE:
+if USE_POSTGRES:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -137,11 +160,13 @@ REST_FRAMEWORK = {
     ],
 }
 
-# SimpleJWT Token Lifetimes
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
-    "AUTH_HEADER_TYPES": ("Bearer",),
-}
+# Media Files Configuration (for uploaded resumes)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# LLM API Configuration for AI Inference (Supports xAI Grok, Groq, and OpenAI)
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')
+XAI_API_KEY = os.getenv('XAI_API_KEY', '')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+LLM_BASE_URL = os.getenv('LLM_BASE_URL', '')

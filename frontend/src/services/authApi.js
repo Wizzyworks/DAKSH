@@ -1,131 +1,126 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/auth";
+import { API_ENDPOINTS, fetchApi } from './apiConfig'
 
-export const authStorage = {
-    getTokens: () => {
-        try {
-            return {
-                access: localStorage.getItem('daksh_access_token'),
-                refresh: localStorage.getItem('daksh_refresh_token'),
-            }
-        } catch {
-            return { access: null, refresh: null }
-        }
-    },
-    setTokens: ({ access, refresh }) => {
-        if (access) localStorage.setItem('daksh_access_token', access)
-        if (refresh) localStorage.setItem('daksh_refresh_token', refresh)
-    },
-    clearTokens: () => {
-        localStorage.removeItem('daksh_access_token')
-        localStorage.removeItem('daksh_refresh_token')
-        localStorage.removeItem('daksh-user')
-    },
-}
-
-async function apiRequest(endpoint, options = {}) {
-    const { access } = authStorage.getTokens()
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(access ? { Authorization: `Bearer ${access}` } : {}),
-        ...options.headers,
-    }
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-    })
-    // Handle Token Expiry (401 Unauthorized) by attempting refresh
-    if (res.status === 401 && !endpoint.includes('login') && !endpoint.includes('register')) {
-        const refreshed = await authApi.refreshToken()
-        if (refreshed) {
-            // Retry original request once with new token
-            headers.Authorization = `Bearer ${refreshed.access}`
-            const retryRes = await fetch(`${API_BASE_URL}${endpoint}`, {
-                ...options,
-                headers,
-            })
-            if (!retryRes.ok) {
-                const errorData = await retryRes.json().catch(() => ({}))
-                throw errorData
-            }
-            return await retryRes.json()
-        } else {
-            authStorage.clearTokens()
-            window.location.href = '/login'
-        }
-    }
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-        throw data
-    }
-    return data
-}
 export const authApi = {
-    // 1. Register candidate
-    async register(payload) {
-        const data = await apiRequest('/register/', {
-            method: 'POST',
-            body: JSON.stringify(payload),
+  /**
+   * Authenticate user with email and password via backend Django API
+   */
+  async login(email, password) {
+    const data = await fetchApi(API_ENDPOINTS.auth.login, {
+      method: 'POST',
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+    })
+
+    if (data?.tokens?.access) {
+      localStorage.setItem('daksh_access_token', data.tokens.access)
+    }
+    if (data?.tokens?.refresh) {
+      localStorage.setItem('daksh_refresh_token', data.tokens.refresh)
+    }
+    if (data?.user) {
+      localStorage.setItem('daksh-user', JSON.stringify(data.user))
+    }
+
+    return data
+  },
+
+  /**
+   * Register a new user account with backend Django API
+   */
+  async register({ email, password, confirm_password, first_name, last_name, phone_number, role = 'candidate' }) {
+    const payload = {
+      email: email.trim().toLowerCase(),
+      password,
+      confirm_password: confirm_password || password,
+      first_name: first_name || email.split('@')[0],
+      last_name: last_name || 'Candidate',
+      phone_number: phone_number || '',
+      role,
+    }
+
+    const data = await fetchApi(API_ENDPOINTS.auth.register, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+
+    if (data?.tokens?.access) {
+      localStorage.setItem('daksh_access_token', data.tokens.access)
+    }
+    if (data?.tokens?.refresh) {
+      localStorage.setItem('daksh_refresh_token', data.tokens.refresh)
+    }
+    if (data?.user) {
+      localStorage.setItem('daksh-user', JSON.stringify(data.user))
+    }
+
+    return data
+  },
+
+  /**
+   * Retrieve current authenticated user detail & profile
+   */
+  async getCurrentUser() {
+    return await fetchApi(API_ENDPOINTS.auth.me, {
+      method: 'GET',
+    })
+  },
+
+  /**
+   * Retrieve user profile details
+   */
+  async getProfile() {
+    return await fetchApi(API_ENDPOINTS.auth.profile, {
+      method: 'GET',
+    })
+  },
+
+  /**
+   * Update user profile partially
+   */
+  async updateProfile(profileData) {
+    return await fetchApi(API_ENDPOINTS.auth.profile, {
+      method: 'PATCH',
+      body: JSON.stringify(profileData),
+    })
+  },
+
+  /**
+   * Submit onboarding details to Django backend
+   */
+  async submitOnboarding(onboardingData) {
+    return await fetchApi(API_ENDPOINTS.auth.onboarding, {
+      method: 'POST',
+      body: JSON.stringify(onboardingData),
+    })
+  },
+
+  /**
+   * Check onboarding status
+   */
+  async getOnboardingStatus() {
+    return await fetchApi(API_ENDPOINTS.auth.onboardingStatus, {
+      method: 'GET',
+    })
+  },
+
+  /**
+   * Logout user and blacklist refresh token on backend
+   */
+  async logout() {
+    const refresh = localStorage.getItem('daksh_refresh_token')
+    if (refresh) {
+      try {
+        await fetchApi(API_ENDPOINTS.auth.logout, {
+          method: 'POST',
+          body: JSON.stringify({ refresh }),
         })
-        if (data.tokens) authStorage.setTokens(data.tokens)
-        return data
-    },
-    // 2. Login candidate
-    async login(email, password) {
-        const data = await apiRequest('/login/', {
-            method: 'POST',
-            body: JSON.stringify({ email, password }),
-        })
-        if (data.tokens) authStorage.setTokens(data.tokens)
-        return data
-    },
-    // 3. Get Authenticated User Profile & Skills
-    async getMe() {
-        return await apiRequest('/me/')
-    },
-    // 4. Refresh Expired Access Token
-    async refreshToken() {
-        const { refresh } = authStorage.getTokens()
-        if (!refresh) return null
-        try {
-            const res = await fetch(`${API_BASE_URL}/token/refresh/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refresh }),
-            })
-            if (!res.ok) return null
-            const data = await res.json()
-            if (data.access) {
-                localStorage.setItem('daksh_access_token', data.access)
-                return data
-            }
-        } catch {
-            return null
-        }
-        return null
-    },
-    // 5. Submit Onboarding Data
-    async submitOnboarding(payload) {
-        return await apiRequest('/onboarding/', {
-            method: 'POST',
-            body: JSON.stringify(payload),
-        })
-    },
-    // 6. Get Onboarding Status
-    async getOnboardingStatus() {
-        return await apiRequest('/onboarding/status/')
-    },
-    // 7. Logout & Blacklist Token
-    async logout() {
-        const { refresh } = authStorage.getTokens()
-        try {
-            if (refresh) {
-                await apiRequest('/logout/', {
-                    method: 'POST',
-                    body: JSON.stringify({ refresh }),
-                })
-            }
-        } finally {
-            authStorage.clearTokens()
-        }
-    },
+      } catch (err) {
+        console.warn('Backend logout notification failed:', err)
+      }
+    }
+
+    localStorage.removeItem('daksh_access_token')
+    localStorage.removeItem('daksh_refresh_token')
+    localStorage.removeItem('daksh-user')
+  },
 }
+

@@ -1,23 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Terminal, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Check, X } from 'lucide-react'
 import { ADAPTIVE_QUESTION_POOL } from './skillGapData'
 
 export default function Step4DiagnosticArena({
+  questions = ADAPTIVE_QUESTION_POOL,
   arenaAnswers,
   setArenaAnswers,
   onBack,
   onCompleteCalibration,
 }) {
+  const activeQuestions = questions && questions.length > 0 ? questions : ADAPTIVE_QUESTION_POOL
+
   // Current active question index (0 to total - 1)
   const [currentQIndex, setCurrentQIndex] = useState(0)
   // Track submission state for the current question
   const [isCurrentEvaluated, setIsCurrentEvaluated] = useState(false)
   const [selectedOptionId, setSelectedOptionId] = useState(null)
 
-  const currentQuestion = ADAPTIVE_QUESTION_POOL[currentQIndex] || ADAPTIVE_QUESTION_POOL[0]
-  const totalQuestions = ADAPTIVE_QUESTION_POOL.length
-  const calibrationConfidence = Math.round(((currentQIndex + (isCurrentEvaluated ? 1 : 0)) / totalQuestions) * 100)
+  // Reset arena state when questions array changes
+  useEffect(() => {
+    setCurrentQIndex(0)
+    setIsCurrentEvaluated(false)
+    setSelectedOptionId(null)
+  }, [questions])
+
+  const currentQuestion = activeQuestions[currentQIndex] || activeQuestions[0] || {}
+  const totalQuestions = activeQuestions.length
+  const calibrationConfidence = totalQuestions > 0 ? Math.round(((currentQIndex + (isCurrentEvaluated ? 1 : 0)) / totalQuestions) * 100) : 0
+
+  const correctKey = currentQuestion.correct || currentQuestion.correct_answer
+  const isCorrect = selectedOptionId === correctKey
 
   // Handle option selection
   const handleSelectOption = (optionId) => {
@@ -28,12 +41,13 @@ export default function Step4DiagnosticArena({
   // Submit current question evaluation
   const handleSubmitCurrent = () => {
     if (!selectedOptionId || isCurrentEvaluated) return
-    const isCorrect = selectedOptionId === currentQuestion.correct
     setArenaAnswers((prev) => ({
       ...prev,
-      [currentQuestion.id]: {
+      [currentQuestion.id || `q-${currentQIndex}`]: {
         selected: selectedOptionId,
         isCorrect,
+        skillTarget: currentQuestion.skillTarget || currentQuestion.category || 'General',
+        difficulty_b: currentQuestion.difficulty_b ?? 0.0,
       },
     }))
     setIsCurrentEvaluated(true)
@@ -49,8 +63,6 @@ export default function Step4DiagnosticArena({
       onCompleteCalibration()
     }
   }
-
-  const isCorrect = selectedOptionId === currentQuestion.correct
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
@@ -100,7 +112,7 @@ export default function Step4DiagnosticArena({
       {/* 2. Single Question Focus Container (Animated Slide Transition) */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentQuestion.id}
+          key={currentQuestion.id || currentQIndex}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
@@ -116,19 +128,19 @@ export default function Step4DiagnosticArena({
             boxShadow: 'var(--shadow-lg)',
           }}
         >
-          {/* Domain Category Header (NO Difficulty Tags!) */}
+          {/* Domain Category Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)', background: 'var(--surface-soft)', padding: '3px 10px', borderRadius: '6px', border: '1px solid var(--border)' }}>
-              {currentQuestion.category}
+              {currentQuestion.category || 'Core Engineering'}
             </span>
             <span style={{ fontSize: '11.5px', color: 'var(--text-subtle)', fontWeight: 600 }}>
-              Competency: {currentQuestion.skillTarget}
+              Competency: {currentQuestion.skillTarget || 'General'}
             </span>
           </div>
 
           {/* Question Title & Prompt */}
           <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text)', marginBottom: '14px', lineHeight: 1.4, fontFamily: 'Outfit, sans-serif' }}>
-            {currentQuestion.question}
+            {currentQuestion.question || currentQuestion.title}
           </h4>
 
           {/* Dark Obsidian IDE Code Sandbox with Mac Dots */}
@@ -166,15 +178,17 @@ export default function Step4DiagnosticArena({
 
           {/* 4 Interactive Option Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
-            {currentQuestion.options.map((opt) => {
-              const isChosen = selectedOptionId === opt.id
+            {(currentQuestion.options || []).map((opt, idx) => {
+              const optId = opt.id || opt.key || String.fromCharCode(97 + idx)
+              const optText = typeof opt === 'string' ? opt : (opt.text || opt.value || opt.label || '')
+              const isChosen = selectedOptionId === optId
               let cardBg = 'var(--surface-soft)'
               let cardBorder = 'var(--border)'
               let cardTextColor = 'var(--text)'
               let indicatorBg = 'var(--surface)'
 
               if (isCurrentEvaluated) {
-                if (opt.id === currentQuestion.correct) {
+                if (optId === correctKey) {
                   cardBg = 'rgba(16, 185, 129, 0.12)'
                   cardBorder = 'rgba(16, 185, 129, 0.5)'
                   cardTextColor = '#10B981'
@@ -194,8 +208,8 @@ export default function Step4DiagnosticArena({
 
               return (
                 <button
-                  key={opt.id}
-                  onClick={() => handleSelectOption(opt.id)}
+                  key={optId}
+                  onClick={() => handleSelectOption(optId)}
                   disabled={isCurrentEvaluated}
                   style={{
                     background: cardBg,
@@ -219,7 +233,7 @@ export default function Step4DiagnosticArena({
                       height: '24px',
                       borderRadius: '6px',
                       background: indicatorBg,
-                      color: isChosen || (isCurrentEvaluated && opt.id === currentQuestion.correct) ? '#FFFFFF' : 'var(--text-muted)',
+                      color: isChosen || (isCurrentEvaluated && optId === correctKey) ? '#FFFFFF' : 'var(--text-muted)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -229,15 +243,15 @@ export default function Step4DiagnosticArena({
                       flexShrink: 0,
                     }}
                   >
-                    {isCurrentEvaluated && opt.id === currentQuestion.correct ? (
+                    {isCurrentEvaluated && optId === correctKey ? (
                       <Check size={13} strokeWidth={3} />
                     ) : isCurrentEvaluated && isChosen && !isCorrect ? (
                       <X size={13} strokeWidth={3} />
                     ) : (
-                      opt.id
+                      optId
                     )}
                   </div>
-                  <span style={{ lineHeight: 1.45, flex: 1 }}>{opt.text}</span>
+                  <span style={{ lineHeight: 1.45, flex: 1 }}>{optText}</span>
                 </button>
               )
             })}

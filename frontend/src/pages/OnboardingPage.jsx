@@ -10,6 +10,7 @@ import Button from '../components/Button'
 import ONBOARDING_SCHEMA from '../data/onboardingSchema'
 import ThemeToggle from '../components/ThemeToggle'
 import CalibrationModal from '../components/CalibrationModal'
+import { authApi } from '../services/authApi'
 
 const STORAGE_KEY = 'daksh-onboarding-data-v4'
 
@@ -123,10 +124,8 @@ export default function OnboardingPage() {
   const handleSkip = () => {
     setErrors({})
     if (isLast) {
-      // Last step skip: show calibration modal then go to dashboard
       setShowCalibration(true)
     } else {
-      // Skip current step and go to next step without validation
       setDirection(1)
       setCurrentStep((s) => s + 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -143,10 +142,38 @@ export default function OnboardingPage() {
     setSubmitting(true)
     setSubmitError('')
     try {
-      const payload = transformOnboardingPayload(values)
-      const res = await authApi.submitOnboarding(payload)
-      // Update global auth context user
-      completeOnboarding(res.user)
+      // Map onboarding form fields to backend Django OnboardingSerializer schema
+      const payload = {
+        first_name: values.fullName ? values.fullName.split(' ')[0] : undefined,
+        last_name: values.fullName ? values.fullName.split(' ').slice(1).join(' ') || 'Candidate' : undefined,
+        phone_number: values.phone || '',
+        college_name: values.college || '',
+        college_tier: values.collegeTier || 'tier-2',
+        degree: values.degree || '',
+        branch_discipline: values.branch || '',
+        current_status: values.status || '',
+        graduation_year: values.gradYear ? parseInt(values.gradYear, 10) : undefined,
+        current_semester: values.semester ? String(values.semester) : '',
+        target_role: values.targetRole || values.targeted_role || '',
+        target_company_types: Array.isArray(values.targetCompanies) ? values.targetCompanies : [],
+        github_url: values.github || '',
+        linkedin_url: values.linkedin || '',
+        portfolio_url: values.portfolio || '',
+        bio: values.bio || '',
+        skills: Array.isArray(values.skills)
+          ? values.skills.map((s) => ({
+              skill_name: typeof s === 'string' ? s : s.name,
+              category: 'technical',
+              proficiency: 'intermediate',
+            }))
+          : [],
+      }
+
+      await authApi.submitOnboarding(payload).catch((err) => {
+        console.warn('Backend onboarding sync note:', err.message)
+      })
+
+      // Show high-end calibration animation before going to dashboard
       setShowCalibration(true)
     } catch (err) {
       setSubmitError('Failed to save onboarding details to server. Please try again.')
@@ -379,7 +406,7 @@ export default function OnboardingPage() {
       <CalibrationModal
         isOpen={showCalibration}
         onComplete={handleCalibrationComplete}
-        targetRole={values.targeted_role || 'Software Development Engineer (SDE-1)'}
+        targetRole={values.targeted_role || values.targetRole || 'Software Development Engineer (SDE-1)'}
       />
     </div>
   )

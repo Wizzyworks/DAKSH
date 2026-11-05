@@ -3,6 +3,7 @@ import { Target, ArrowLeft, RefreshCw, Sparkles } from 'lucide-react'
 import { PRESET_ROLES } from './skillGapData'
 
 export default function Step2TargetBenchmark({
+  roles = PRESET_ROLES,
   selectedRole,
   setSelectedRole,
   customJDText,
@@ -33,7 +34,7 @@ export default function Step2TargetBenchmark({
           </label>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {PRESET_ROLES.map((role) => {
+            {(roles && roles.length > 0 ? roles : PRESET_ROLES).map((role) => {
               const isSelected = selectedRole === role.id
               return (
                 <div
