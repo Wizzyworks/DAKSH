@@ -36,11 +36,20 @@ export default function DashboardPage() {
     else navigate('/dashboard')
   }
 
-  // Retrieve user onboarding profile data
+  // Retrieve user onboarding profile data, merging local cache with backend profile
   const profileData = (() => {
     try {
       const stored = localStorage.getItem('daksh-onboarding-data-v4')
-      return stored ? JSON.parse(stored) : {}
+      const localData = stored ? JSON.parse(stored) : {}
+      const backendProfile = user?.profile || {}
+      return {
+        ...localData,
+        ...backendProfile,
+        skills: user?.skills?.length ? user.skills : (localData.skills || []),
+        target_role: backendProfile.target_role || localData.targetRole || 'Full Stack Engineer (SDE-1)',
+        degree: backendProfile.degree || localData.degree || 'B.Tech',
+        branch_discipline: backendProfile.branch_discipline || localData.branch || 'Computer Science',
+      }
     } catch {
       return {}
     }
@@ -81,7 +90,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardLayout activeTab={activeTab} onSelectTab={handleSelectTab}>
+    <DashboardLayout
+      activeTab={activeTab}
+      onSelectTab={handleSelectTab}
+      user={user}
+    >
       {renderActiveView()}
     </DashboardLayout>
   )

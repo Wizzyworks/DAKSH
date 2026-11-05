@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Check, ChevronRight } from 'lucide-react'
 import Step1ResumeIntake from './Step1ResumeIntake'
@@ -6,63 +6,185 @@ import Step2TargetBenchmark from './Step2TargetBenchmark'
 import Step3GapReport from './Step3GapReport'
 import Step4DiagnosticArena from './Step4DiagnosticArena'
 import Step5CalibratedRoadmap from './Step5CalibratedRoadmap'
-import { PRESET_ROLES } from './skillGapData'
+import { PRESET_ROLES, ADAPTIVE_QUESTION_POOL } from './skillGapData'
+import { skillGapApi } from '../../services/skillGapApi'
 
-export default function SkillGapWorkspace({ profileData, onNavigateToRoadmap }) {
-  const hasOnboardingResume = !!profileData.resume?.name
+export default function SkillGapWorkspace({ profileData = {}, onNavigateToRoadmap }) {
+  const hasOnboardingResume = Boolean(profileData.resume?.name)
 
   // Wizard Step Navigation State (1 to 5)
   const [currentStep, setCurrentStep] = useState(1)
 
-  // Step 1: Resume Intake State
+  // Step 1: Resume Intake & Extracted Skills State
   const [resumeSource, setResumeSource] = useState(hasOnboardingResume ? 'existing' : 'custom')
   const [customResumeFile, setCustomResumeFile] = useState(null)
+  const [extractedSkills, setExtractedSkills] = useState([])
 
   // Step 2: Target Benchmark & JD State
+  const [availableRoles, setAvailableRoles] = useState(PRESET_ROLES)
   const [selectedRole, setSelectedRole] = useState('sde-fullstack')
   const [customJDText, setCustomJDText] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisProgress, setAnalysisProgress] = useState(0)
   const [analysisStatusText, setAnalysisStatusText] = useState('')
 
-  // Step 4: Adaptive Diagnostic Answers (Stored per question: { [qId]: { selected, isCorrect } })
+  // Step 3: Real Gap Report State from Backend
+  const [gapReport, setGapReport] = useState(null)
+
+  // Step 4: IRT Adaptive Questions & User Responses
+  const [diagnosticQuestions, setDiagnosticQuestions] = useState(ADAPTIVE_QUESTION_POOL)
   const [arenaAnswers, setArenaAnswers] = useState({})
 
-  // Determine active role config
-  const activeRoleConfig = PRESET_ROLES.find((r) => r.id === selectedRole) || PRESET_ROLES[0]
+  // Step 5: IRT Calibration Result
+  const [calibrationResult, setCalibrationResult] = useState(null)
 
-  // Step 2 Analysis Trigger
-  const handleRunAnalysis = () => {
-    setIsAnalyzing(true)
-    setAnalysisProgress(0)
-
-    const steps = [
-      { p: 25, text: 'Parsing resume ATS tokens and extracting verified skills...' },
-      { p: 55, text: 'Benchmarking candidate profile against Tier-1 SDE rubric...' },
-      { p: 85, text: 'Computing semantic distance matrix and severity classification...' },
-      { p: 100, text: 'Synthesizing adaptive diagnostic assessment arena...' },
-    ]
-
-    let currentStepIdx = 0
-    const interval = setInterval(() => {
-      if (currentStepIdx < steps.length) {
-        setAnalysisProgress(steps[currentStepIdx].p)
-        setAnalysisStatusText(steps[currentStepIdx].text)
-        currentStepIdx++
-      } else {
-        clearInterval(interval)
-        setIsAnalyzing(false)
-        setCurrentStep(3) // Advance to Step 3: Report Card
+  // 1. Fetch Target Roles Taxonomy from Backend on Mount
+  useEffect(() => {
+    async function loadRoles() {
+      const roles = await skillGapApi.getRoles()
+      if (roles && roles.length > 0) {
+        setAvailableRoles(
+          roles.map((r) => ({
+            id: r.role_slug,
+            title: r.role_title,
+            tier: r.department_domain || 'Engineering Track',
+            coreSkills: r.standard_required_skills || [],
+            description: r.description || 'Target competency rubric for placement.',
+          }))
+        )
       }
-    }, 400)
+    }
+    loadRoles()
+  }, [])
+
+  // Active role configuration object
+  const activeRoleConfig = availableRoles.find((r) => r.id === selectedRole) || availableRoles[0]
+
+  // 2. Step 1 -> Step 2: Trigger Resume Parsing via Backend
+  const handleProceedFromStep1 = async () => {
+    try {
+      let fileToParse = resumeSource === 'custom' ? customResumeFile : null
+      let sampleText = ''
+      if (!fileToParse && (profileData.target_role || profileData.degree)) {
+        sampleText = `Candidate pursuing ${profileData.target_role || 'SDE'}. Education: ${profileData.degree || 'B.Tech'} in ${profileData.branch_discipline || 'CSE'}. Skills: ${Array.isArray(profileData.skills) ? profileData.skills.map(s => typeof s === 'string' ? s : s.name).join(', ') : 'React.js, Node.js, JavaScript'}`
+      }
+
+      if (fileToParse || sampleText) {
+        const parseRes = await skillGapApi.parseResume(fileToParse, sampleText)
+        if (parseRes?.analysis?.skills && parseRes.analysis.skills.length > 0) {
+          setExtractedSkills(parseRes.analysis.skills)
+        } else if (profileData.skills?.length > 0) {
+          setExtractedSkills(
+            profileData.skills.map((s) => ({
+              name: typeof s === 'string' ? s : s.name || s.canonical_name,
+              proficiency: 'intermediate',
+            }))
+          )
+        }
+      }
+    } catch (err) {
+      console.warn('Resume parser note, continuing with profile skills:', err.message)
+      if (profileData.skills?.length > 0) {
+        setExtractedSkills(
+          profileData.skills.map((s) => ({
+            name: typeof s === 'string' ? s : s.name || s.canonical_name,
+            proficiency: 'intermediate',
+          }))
+        )
+      }
+    }
+    setCurrentStep(2)
   }
 
-  // Calculate Verified Calibration Bonus from Adaptive Q&A
-  const correctAnswersCount = Object.values(arenaAnswers).filter((ans) => ans?.isCorrect).length
-  const verifiedBonusScore = correctAnswersCount * 3 // +3% boost per verified question
+  // 3. Step 2 -> Step 3: Trigger Live Semantic Gap Analysis against Backend
+  const handleRunAnalysis = async () => {
+    setIsAnalyzing(true)
+    setAnalysisProgress(20)
+    setAnalysisStatusText('Extracting ATS skill tokens and competency taxonomy...')
 
-  const baseMatch = 72
-  const finalCalibratedScore = Math.min(98, baseMatch + verifiedBonusScore)
+    try {
+      setAnalysisProgress(50)
+      setAnalysisStatusText('Benchmarking candidate profile against backend target rubric...')
+
+      // Normalize candidate skills to ensure [{ name: '...', proficiency: '...' }]
+      let skillsToSend = extractedSkills
+      if (!skillsToSend || skillsToSend.length === 0) {
+        skillsToSend = (profileData.skills || []).map((s) =>
+          typeof s === 'string'
+            ? { name: s, proficiency: 'intermediate' }
+            : { name: s.canonical_name || s.skill_name || s.name, proficiency: s.proficiency || 'intermediate' }
+        )
+      }
+
+      // If still empty, use active role's partial skills as baseline candidate skills
+      if (skillsToSend.length === 0 && activeRoleConfig?.coreSkills?.length) {
+        skillsToSend = activeRoleConfig.coreSkills.slice(0, 3).map((s) => ({
+          name: s,
+          proficiency: 'intermediate',
+        }))
+      }
+
+      // Call live backend gap analyzer
+      const report = await skillGapApi.analyzeBenchmark(selectedRole, skillsToSend, customJDText)
+      console.log('Live backend gap report received:', report)
+      setGapReport(report)
+
+      setAnalysisProgress(80)
+      setAnalysisStatusText('Synthesizing IRT adaptive assessment arena...')
+
+      // Generate dynamic questions based on detected gaps in isolated block
+      try {
+        const gapNames = report?.gap_items?.map((item) => item.skill_name || item.name) || []
+        if (gapNames.length > 0) {
+          const questionsRes = await skillGapApi.generateDiagnosticQuestions(gapNames)
+          if (questionsRes?.questions && questionsRes.questions.length > 0) {
+            setDiagnosticQuestions(questionsRes.questions)
+          }
+        }
+      } catch (qErr) {
+        console.warn('Diagnostic questions generator note:', qErr.message)
+      }
+
+      setAnalysisProgress(100)
+      setAnalysisStatusText('Calibration framework synthesized!')
+
+      setTimeout(() => {
+        setIsAnalyzing(false)
+        setCurrentStep(3)
+      }, 400)
+    } catch (err) {
+      console.warn('Backend benchmark call failed:', err.message)
+      setIsAnalyzing(false)
+      setCurrentStep(3)
+    }
+  }
+
+  // 4. Step 4 -> Step 5: Trigger Backend IRT 1PL Calibration
+  const handleCompleteCalibration = async () => {
+    const baseScore = gapReport?.overall_match_score || 72
+    const formattedResponses = Object.entries(arenaAnswers).map(([qId, ans]) => ({
+      question_id: qId,
+      skill: ans.skillTarget || 'General',
+      difficulty_b: ans.difficulty_b ?? 0.0,
+      is_correct: Boolean(ans.isCorrect),
+    }))
+
+    try {
+      const calRes = await skillGapApi.calibrateDiagnostic(baseScore, formattedResponses)
+      setCalibrationResult(calRes)
+    } catch (err) {
+      console.warn('Backend IRT calibration call failed, using local calculation:', err.message)
+    }
+    setCurrentStep(5)
+  }
+
+  const baseMatch = gapReport?.overall_match_score ? Math.round(Number(gapReport.overall_match_score)) : 72
+  const verifiedBonusScore =
+    calibrationResult?.calibration_boost ||
+    Object.values(arenaAnswers).filter((ans) => ans?.isCorrect).length * 3
+  const finalCalibratedScore =
+    calibrationResult?.final_calibrated_match ||
+    Math.min(98, baseMatch + verifiedBonusScore)
 
   return (
     <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
@@ -73,7 +195,7 @@ export default function SkillGapWorkspace({ profileData, onNavigateToRoadmap }) 
             ACTIVE ENGINE: MODULE 1
           </span>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
-            Fresher & Campus Placement Adaptive Calibration Engine
+            Live AI Placement Skill Gap & IRT Calibration Engine
           </span>
         </div>
 
@@ -81,7 +203,7 @@ export default function SkillGapWorkspace({ profileData, onNavigateToRoadmap }) 
           AI Skill Gap Analysis & Diagnostic Scanner
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0, maxWidth: '780px', lineHeight: 1.5 }}>
-          Follow the 5-step progressive workflow to benchmark your resume against Tier-1 SDE rubrics, verify competencies in the 1-by-1 Diagnostic Arena, and generate your custom learning path.
+          Follow the 5-step progressive workflow to benchmark your resume against target rubrics, verify competencies with IRT adaptive testing, and calibrate your learning path.
         </p>
       </div>
 
@@ -149,9 +271,7 @@ export default function SkillGapWorkspace({ profileData, onNavigateToRoadmap }) 
                 {step.title}
               </span>
 
-              {idx < 4 && (
-                <ChevronRight size={14} color="var(--text-subtle)" style={{ marginLeft: '6px' }} />
-              )}
+              {idx < 4 && <ChevronRight size={14} color="var(--text-subtle)" style={{ marginLeft: '6px' }} />}
             </div>
           )
         })}
@@ -167,13 +287,14 @@ export default function SkillGapWorkspace({ profileData, onNavigateToRoadmap }) 
             setResumeSource={setResumeSource}
             customResumeFile={customResumeFile}
             setCustomResumeFile={setCustomResumeFile}
-            onNext={() => setCurrentStep(2)}
+            onNext={handleProceedFromStep1}
           />
         )}
 
         {currentStep === 2 && (
           <Step2TargetBenchmark
             key="step-2"
+            roles={availableRoles}
             selectedRole={selectedRole}
             setSelectedRole={setSelectedRole}
             customJDText={customJDText}
@@ -192,6 +313,7 @@ export default function SkillGapWorkspace({ profileData, onNavigateToRoadmap }) 
             key="step-3"
             baseMatch={baseMatch}
             activeRoleConfig={activeRoleConfig}
+            gapReport={gapReport}
             onBack={() => setCurrentStep(2)}
             onNext={() => setCurrentStep(4)}
           />
@@ -200,10 +322,11 @@ export default function SkillGapWorkspace({ profileData, onNavigateToRoadmap }) 
         {currentStep === 4 && (
           <Step4DiagnosticArena
             key="step-4"
+            questions={diagnosticQuestions}
             arenaAnswers={arenaAnswers}
             setArenaAnswers={setArenaAnswers}
             onBack={() => setCurrentStep(3)}
-            onCompleteCalibration={() => setCurrentStep(5)}
+            onCompleteCalibration={handleCompleteCalibration}
           />
         )}
 
@@ -214,6 +337,7 @@ export default function SkillGapWorkspace({ profileData, onNavigateToRoadmap }) 
             baseMatch={baseMatch}
             verifiedBonusScore={verifiedBonusScore}
             finalCalibratedScore={finalCalibratedScore}
+            calibrationResult={calibrationResult}
             onNavigateToRoadmap={onNavigateToRoadmap}
           />
         )}

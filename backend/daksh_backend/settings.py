@@ -4,8 +4,12 @@ Django settings for DAKSH backend project.
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from backend/.env
+load_dotenv(BASE_DIR / '.env')
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-daksh-skill-gap-analysis-dev-key")
 
@@ -27,10 +31,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
-    # Daksh App
+    # Daksh Apps
     'accounts',
     'skill_gap',
 ]
+
 AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
@@ -64,8 +69,40 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "daksh_backend.wsgi.application"
+
+# CORS Configuration
+cors_origins_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+if cors_origins_env:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-test-user-id',
+]
+
 # Database Configuration (Defaults to SQLite for local development, switches to PostgreSQL if enabled)
-USE_POSTGRES = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
+use_sqlite_str = os.getenv('USE_SQLITE', '')
+if use_sqlite_str != '':
+    USE_POSTGRES = not (use_sqlite_str.lower() in ('true', '1', 'yes'))
+else:
+    USE_POSTGRES = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
+
 if USE_POSTGRES:
     DATABASES = {
         "default": {
@@ -109,9 +146,14 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.JSONParser",
     ],
 }
+
 # Media Files Configuration (for uploaded resumes)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-# Groq API Configuration for AI Inference
+
+# LLM API Configuration for AI Inference (Supports xAI Grok, Groq, and OpenAI)
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
 GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')
+XAI_API_KEY = os.getenv('XAI_API_KEY', '')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+LLM_BASE_URL = os.getenv('LLM_BASE_URL', '')

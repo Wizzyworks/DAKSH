@@ -62,7 +62,6 @@ class GapAnalyzerService:
         canonical = cls.normalize_skill_name(skill_name)
         slug = slugify(canonical) or 'skill-' + slugify(skill_name)
         
-        # Match allowed category enum
         cat_enum = SkillCategoryEnum.TECHNICAL
         if category in [c.value for c in SkillCategoryEnum]:
             cat_enum = category
@@ -77,14 +76,13 @@ class GapAnalyzerService:
         )
         return skill_obj
 
-    def analyze_against_role(self, user, role_slug: str, candidate_skills: List[Dict[str, Any]]) -> SkillGapReport:
+    def analyze_against_role(self, user, role_slug: str, candidate_skills: List[Any]) -> SkillGapReport:
         """
         Analyzes candidate skills against a preset role (e.g., sde-fullstack).
         """
         try:
             target_role = JobRoleTaxonomy.objects.get(role_slug=role_slug)
         except JobRoleTaxonomy.DoesNotExist:
-            # Create a default role taxonomy if not present in DB
             target_role = JobRoleTaxonomy.objects.create(
                 role_title=role_slug.replace('-', ' ').title(),
                 role_slug=role_slug,
@@ -94,7 +92,6 @@ class GapAnalyzerService:
         # Get required skills for this role
         requirements = RoleSkillRequirement.objects.filter(role=target_role)
         if not requirements.exists():
-            # Seed default requirements from standard_required_skills
             req_list = target_role.standard_required_skills or ['React.js', 'Node.js', 'PostgreSQL', 'Docker', 'Git']
             for skill_name in req_list:
                 s_obj = self.get_or_create_skill(skill_name)
@@ -108,8 +105,13 @@ class GapAnalyzerService:
         # Build candidate skill normalized lookup map
         cand_map = {}
         for item in candidate_skills:
+            if isinstance(item, str):
+                item = {'name': item, 'proficiency': 'intermediate'}
+            elif not isinstance(item, dict):
+                continue
+
             norm_name = self.normalize_skill_name(item.get('name', ''))
-            prof = item.get('proficiency', 'intermediate').lower()
+            prof = (item.get('proficiency') or 'intermediate').lower()
             score = 90.0 if prof == 'advanced' else (70.0 if prof == 'intermediate' else 40.0)
             cand_map[norm_name.lower()] = {
                 'original': item.get('name', ''),
