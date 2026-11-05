@@ -33,13 +33,19 @@ export default function LoginPage() {
     const v = validate(email, password)
     setErrors(v)
     if (Object.keys(v).length) return
-
     setLoading(true)
     try {
       await login(email, password)
       navigate('/dashboard')
     } catch (err) {
-      setFormError(err.message || 'Login failed. Please verify credentials.')
+      // Extract DRF field errors or non_field_errors
+      const msg =
+        err.non_field_errors?.[0] ||
+        err.detail ||
+        err.email?.[0] ||
+        err.password?.[0] ||
+        'Invalid email or password. Please verify credentials.'
+      setFormError(msg)
     } finally {
       setLoading(false)
     }

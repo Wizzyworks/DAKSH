@@ -124,18 +124,21 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('daksh-user')
   }
 
-  const completeOnboarding = () => {
-    if (user?.id) {
-      localStorage.setItem(`daksh-onboarding-${user.id}`, 'true')
-    }
-    localStorage.setItem('daksh-onboarding-complete', 'true')
-    setOnboardingComplete(true)
-  }
+  const completeOnboarding = (updatedUser) => {
+    if (updatedUser) {
+      setUser(updatedUser)
 
+      setOnboardingComplete(Boolean(updatedUser?.profile?.is_onboarded))
+      localStorage.setItem('daksh-user', JSON.stringify(updatedUser))
+    } else {
+      setOnboardingComplete(true)
+    }
+  }
   return (
     <AuthContext.Provider
       value={{
         user,
+        loading,
         onboardingComplete,
         login,
         signup,
@@ -143,7 +146,7 @@ export function AuthProvider({ children }) {
         completeOnboarding,
       }}
     >
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   )
 }

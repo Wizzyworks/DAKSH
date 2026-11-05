@@ -8,8 +8,10 @@ import Input from '../components/Input'
 import PasswordInput from '../components/PasswordInput'
 import Button from '../components/Button'
 
-function validate(email, password, confirm) {
+function validate(firstName, lastName, email, password, confirm) {
   const errors = {}
+  if (!firstName.trim()) errors.firstName = 'First name is required'
+  if (!lastName.trim()) errors.lastName = 'Last name is required'
   if (!email) errors.email = 'Email is required'
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'Enter a valid email address'
   if (!password) errors.password = 'Password is required'
@@ -28,7 +30,8 @@ const requirements = [
 export default function SignupPage() {
   const { signup } = useAuth()
   const navigate = useNavigate()
-
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -40,16 +43,23 @@ export default function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError('')
-    const v = validate(email, password, confirm)
+    const v = validate(firstName, lastName, email, password, confirm)
     setErrors(v)
     if (Object.keys(v).length) return
 
     setLoading(true)
     try {
-      await signup(email, password)
+      await signup({
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        password,
+        confirm_password: confirm,
+      })
       navigate('/onboarding', { replace: true })
     } catch (err) {
-      setFormError(err.message || 'Could not create account. Please try again.')
+      const msg = err.email?.[0] || err.password?.[0] || err.detail || 'Registration failed.'
+      setFormError(msg)
     } finally {
       setLoading(false)
     }
@@ -115,6 +125,23 @@ export default function SignupPage() {
             <p style={{ fontSize: '13px', color: '#EF4444', fontWeight: 600 }}>{formError}</p>
           </motion.div>
         )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <Input
+            label="First Name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="e.g. Rahul"
+            error={errors.firstName}
+          />
+          <Input
+            label="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="e.g. Sharma"
+            error={errors.lastName}
+          />
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <Input
