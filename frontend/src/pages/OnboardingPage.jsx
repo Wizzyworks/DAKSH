@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Check, AlertCircle, GraduationCap, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { authApi } from '../services/authApi'
 import ProgressIndicator from '../components/ProgressIndicator'
 import OnboardingStep from '../components/OnboardingStep'
 import Button from '../components/Button'
@@ -11,6 +12,31 @@ import ThemeToggle from '../components/ThemeToggle'
 import CalibrationModal from '../components/CalibrationModal'
 
 const STORAGE_KEY = 'daksh-onboarding-data-v4'
+
+function transformOnboardingPayload(values) {
+  // Extract 4-digit graduation year from string like 'Batch 2026'
+  let gradYear = null
+  if (values.graduation_year) {
+    const match = String(values.graduation_year).match(/\d{4}/)
+    if (match) gradYear = parseInt(match[0], 10)
+  }
+  return {
+    first_name: values.first_name || '',
+    last_name: values.last_name || '',
+    phone_number: values.phone || '',
+    college_tier: values.college_tier || '',
+    college_name: values.college_name || '',
+    degree: values.degree || '',
+    branch_discipline: values.branch || '',
+    current_status: values.current_status || '',
+    graduation_year: gradYear,
+    experience_months: Number(values.experience_months) || 0,
+    target_role: values.targeted_role || '',
+    target_company_types: Array.isArray(values.targeted_company_types) ? values.targeted_company_types : [],
+    github_url: values.github_link || '',
+    linkedin_url: values.linkedin_link || '',
+  }
+}
 
 function validateStep(step, values) {
   const errors = {}
@@ -66,7 +92,7 @@ export default function OnboardingPage() {
         }
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(safe))
-    } catch {}
+    } catch { }
   }, [values])
 
   const handleChange = (fieldId, value) => {
@@ -114,24 +140,23 @@ export default function OnboardingPage() {
       setErrors(errs)
       return
     }
-
     setSubmitting(true)
     setSubmitError('')
-
     try {
-      // Show high-end calibration animation before going to dashboard
+      const payload = transformOnboardingPayload(values)
+      const res = await authApi.submitOnboarding(payload)
+      // Update global auth context user
+      completeOnboarding(res.user)
       setShowCalibration(true)
     } catch (err) {
-      setSubmitError('Could not save your profile. Please try again.')
+      setSubmitError('Failed to save onboarding details to server. Please try again.')
       setSubmitting(false)
     }
   }
 
   const handleCalibrationComplete = () => {
-    completeOnboarding()
     navigate('/dashboard', { replace: true })
   }
-
   return (
     <div
       style={{
@@ -215,7 +240,7 @@ export default function OnboardingPage() {
       {/* Main Content Area */}
       <main style={{ flex: 1, padding: '40px 24px 80px', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
-          
+
           {/* Header Title */}
           <div style={{ marginBottom: '28px', textAlign: 'center' }}>
             <span className="glow-pill" style={{ marginBottom: '12px' }}>
